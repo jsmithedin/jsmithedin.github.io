@@ -3,14 +3,15 @@ import requests
 from datetime import datetime
 from pathlib import Path
 
+from blog import build_blog
+
 GITHUB_USERNAME = "jsmithedin"
 OUTPUT_DIR = Path("output")
 
 NAV_LINKS = [
     {"label": "github", "url": f"https://github.com/{GITHUB_USERNAME}", "icon": "ti-brand-github"},
     {"label": "linkedin", "url": "https://www.linkedin.com/in/jamie-smith-engineer", "icon": "ti-brand-linkedin"},
-    # Uncomment when blog is ready:
-    # {"label": "blog", "url": "/blog", "icon": "ti-pencil"},
+    {"label": "blog", "url": "/blog", "icon": "ti-pencil"},
 ]
 
 
@@ -196,6 +197,10 @@ def build():
     html = render_html(repos)
     (OUTPUT_DIR / "index.html").write_text(html)
     print(f"Built output/index.html")
+
+    css = Path("css/style.css").read_text()
+    js = Path("js/main.js").read_text()
+    build_blog(OUTPUT_DIR, css, js)
 
 
 if __name__ == "__main__":
