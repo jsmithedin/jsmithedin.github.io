@@ -1,0 +1,988 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>jsmithedin &mdash; projects</title>
+  <meta name="description" content="Jamie Smith &mdash; Principal Engineer. Projects and open source work.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <style>:root {
+  --bg: #0d0d0d;
+  --bg-surface: #141414;
+  --bg-card: #181818;
+  --bg-card-hover: #1e1e1e;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text-primary: #e8e6e0;
+  --text-secondary: #888880;
+  --text-muted: #555550;
+  --accent: #c8f542;
+  --accent-dim: #9bbf2e;
+  --prompt: #c8f542;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Syne", sans-serif;
+  --lang-python: #4c8eff;
+  --lang-ts: #3178c6;
+  --lang-js: #f7df1e;
+  --lang-js-text: #1a1a00;
+  --lang-rust: #ce6a30;
+  --lang-go: #00add8;
+  --lang-shell: #89d67c;
+  --lang-hcl: #7b42bc;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-brand:hover { color: var(--accent); transition: color 0.15s; }
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: var(--accent); }
+.nav-link .ti { font-size: 15px; }
+
+/* ── Header ── */
+.site-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.site-header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 36ch;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-divider {
+  color: var(--border);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* ── Grid ── */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+/* ── Card ── */
+.repo-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.repo-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.repo-card:hover { background: var(--bg-card-hover); }
+.repo-card:hover::before { height: 100%; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+  transition: color 0.15s;
+  flex: 1;
+}
+
+.card-title:hover { color: var(--accent); }
+
+.card-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.card-link:hover { color: var(--accent); }
+.card-link .ti { font-size: 13px; }
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge-topic {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  color: var(--text-muted);
+}
+
+.lang-python  { background: rgba(76, 142, 255, 0.15); color: var(--lang-python); }
+.lang-ts      { background: rgba(49, 120, 198, 0.15); color: var(--lang-ts); }
+.lang-js      { background: rgba(247, 223, 30, 0.15);  color: #c9b500; }
+.lang-rust    { background: rgba(206, 106, 48, 0.15);  color: var(--lang-rust); }
+.lang-go      { background: rgba(0, 173, 216, 0.15);   color: var(--lang-go); }
+.lang-shell   { background: rgba(137, 214, 124, 0.15); color: var(--lang-shell); }
+.lang-hcl     { background: rgba(123, 66, 188, 0.15);  color: var(--lang-hcl); }
+.lang-other   { background: transparent; border: 1px solid var(--border-hover); color: var(--text-muted); }
+
+.card-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.meta-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.meta-item .ti { font-size: 12px; }
+
+/* ── Prompt accent ── */
+.prompt { color: var(--prompt); }
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.footer-link:hover { color: var(--accent); }
+
+/* ── Scanline overlay ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 9999;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .nav-inner { padding: 0 1rem; }
+  .site-main { padding: 0 1rem 3rem; }
+  .site-header { padding: 2.5rem 0 2rem; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .header-stats { flex-direction: row; }
+  .stat { align-items: flex-start; }
+  .repo-grid { grid-template-columns: 1fr; }
+  .site-footer { padding: 1.5rem 1rem; }
+}
+</style>
+</head>
+<body>
+  
+    <nav class="site-nav">
+      <div class="nav-inner">
+        <a href="/" class="nav-brand">
+          <span class="prompt">~/</span>jsmithedin
+        </a>
+        <div class="nav-links"><a href="https://github.com/jsmithedin" class="nav-link" target="_blank" rel="noopener"><i class="ti ti-brand-github" aria-hidden="true"></i> github</a><a href="https://www.linkedin.com/in/jamie-smith-engineer" class="nav-link" target="_blank" rel="noopener"><i class="ti ti-brand-linkedin" aria-hidden="true"></i> linkedin</a></div>
+      </div>
+    </nav>
+  <main class="site-main">
+    <header class="site-header">
+      <div class="header-inner">
+        <div class="header-text">
+          <p class="header-label"><span class="prompt">$</span> ls --sort=date ./projects</p>
+          <h1 class="header-title">projects</h1>
+          <p class="header-subtitle">Principal engineer. AWS &amp; Python. Applied AI in energy &amp; utilities.</p>
+        </div>
+        <div class="header-stats">
+          <div class="stat">
+            <span class="stat-value">25</span>
+            <span class="stat-label">repositories</span>
+          </div>
+          <div class="stat-divider">/</div>
+          <div class="stat">
+            <span class="stat-value">Edinburgh</span>
+            <span class="stat-label">location</span>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <section class="repo-grid" aria-label="Project repositories">
+      
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="card-title" target="_blank" rel="noopener">jsmithedin.github.io</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-other">CSS</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2026</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/house-of-knowledge" class="card-title" target="_blank" rel="noopener">house-of-knowledge</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/house-of-knowledge" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2026</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/calendar-summary" class="card-title" target="_blank" rel="noopener">calendar-summary</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/calendar-summary" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2026</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/film-tracker" class="card-title" target="_blank" rel="noopener">film-tracker</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/film-tracker" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Feb 2026</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/missadamschemistry.com" class="card-title" target="_blank" rel="noopener">missadamschemistry.com</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/missadamschemistry.com" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Feb 2026</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/normal-door-opening-intelligence" class="card-title" target="_blank" rel="noopener">normal-door-opening-intelligence</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/normal-door-opening-intelligence" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Aug 2025</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/filmtracker-api" class="card-title" target="_blank" rel="noopener">filmtracker-api</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/filmtracker-api" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-ts">TypeScript</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Jun 2025</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/overmyhouse" class="card-title" target="_blank" rel="noopener">overmyhouse</a>
+        <div class="card-links">
+          <a href="https://twitter.com/overjamieshouse" class="card-link external" target="_blank" rel="noopener"><i class="ti ti-external-link" aria-hidden="true"></i> live</a>
+          <a href="https://github.com/jsmithedin/overmyhouse" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">Plane over my house -> ADS-B -> SDR -> BEAST -> This thing -> Twitter</p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-go">Go</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Jun 2025</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/FilmApi" class="card-title" target="_blank" rel="noopener">FilmApi</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/FilmApi" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">API Project to learn .Net </p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-other">C#</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2025</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/another-test" class="card-title" target="_blank" rel="noopener">another-test</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/another-test" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Nov 2023</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/test-repo" class="card-title" target="_blank" rel="noopener">test-repo</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/test-repo" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Nov 2023</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/airtrafficcontrol" class="card-title" target="_blank" rel="noopener">airtrafficcontrol</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/airtrafficcontrol" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">Slackbot to trigger deploys of Overmyhouse on merge to master</p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-go">Go</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Feb 2023</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/homeserver_setup" class="card-title" target="_blank" rel="noopener">homeserver_setup</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/homeserver_setup" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2021</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/k8s" class="card-title" target="_blank" rel="noopener">k8s</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/k8s" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2021</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/envirotemp" class="card-title" target="_blank" rel="noopener">envirotemp</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/envirotemp" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Jun 2020</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/jsmth.co.uk" class="card-title" target="_blank" rel="noopener">jsmth.co.uk</a>
+        <div class="card-links">
+          <a href="https://jsmth.co.uk" class="card-link external" target="_blank" rel="noopener"><i class="ti ti-external-link" aria-hidden="true"></i> live</a>
+          <a href="https://github.com/jsmithedin/jsmth.co.uk" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-other">HTML</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Feb 2020</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/skunkworks" class="card-title" target="_blank" rel="noopener">skunkworks</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/skunkworks" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-js">JavaScript</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Nov 2019</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/esp32-presentation" class="card-title" target="_blank" rel="noopener">esp32-presentation</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/esp32-presentation" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Oct 2019</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/weathermon" class="card-title" target="_blank" rel="noopener">weathermon</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/weathermon" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Jul 2019</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/dotfiles" class="card-title" target="_blank" rel="noopener">dotfiles</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/dotfiles" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">My dotfiles.</p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-other">Vim script</span>
+          <span class="badge badge-topic">dotfiles</span>
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Jun 2019</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/serverless-temp-log" class="card-title" target="_blank" rel="noopener">serverless-temp-log</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/serverless-temp-log" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> May 2018</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/speech2readme" class="card-title" target="_blank" rel="noopener">speech2readme</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/speech2readme" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Mar 2018</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/yaas" class="card-title" target="_blank" rel="noopener">yaas</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/yaas" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">Scotland as a Service</p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-js">JavaScript</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Dec 2016</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/chilimonitor" class="card-title" target="_blank" rel="noopener">chilimonitor</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/chilimonitor" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc"></p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-js">JavaScript</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Apr 2016</span>
+        </div>
+      </div>
+    </article>
+    <article class="repo-card">
+      <div class="card-header">
+        <a href="https://github.com/jsmithedin/Scottish-Football-Analysis" class="card-title" target="_blank" rel="noopener">Scottish-Football-Analysis</a>
+        <div class="card-links">
+          
+          <a href="https://github.com/jsmithedin/Scottish-Football-Analysis" class="card-link" target="_blank" rel="noopener">
+            <i class="ti ti-brand-github" aria-hidden="true"></i> source
+          </a>
+        </div>
+      </div>
+      <p class="card-desc">This project will look at the distribution of fouls and cards between teams of the Scottish Premier League</p>
+      <div class="card-footer">
+        <div class="badges">
+          <span class="badge lang-python">Python</span>
+          
+        </div>
+        <div class="card-meta">
+          
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> Oct 2015</span>
+        </div>
+      </div>
+    </article>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <span class="prompt">$</span> built 2026-05-29 19:32 UTC &mdash;
+      <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
+    </p>
+  </footer>
+
+  <script>(function () {
+  const label = document.querySelector(".header-label");
+  if (!label) return;
+
+  const text = label.textContent;
+  label.textContent = "";
+  label.style.visibility = "visible";
+
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.textContent = "▋";
+  cursor.style.cssText = "color: #c8f542; animation: blink 1s step-end infinite;";
+  label.appendChild(cursor);
+
+  const style = document.createElement("style");
+  style.textContent = "@keyframes blink { 50% { opacity: 0; } }";
+  document.head.appendChild(style);
+
+  function type() {
+    if (i < text.length) {
+      cursor.insertAdjacentText("beforebegin", text[i]);
+      i++;
+      setTimeout(type, 35 + Math.random() * 25);
+    } else {
+      setTimeout(() => { cursor.style.display = "none"; }, 1200);
+    }
+  }
+
+  setTimeout(type, 400);
+})();
+</script>
+</body>
+</html>
