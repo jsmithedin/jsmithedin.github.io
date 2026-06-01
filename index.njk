@@ -1,0 +1,100 @@
+---
+layout: base.njk
+permalink: /
+title: jsmithedin — projects
+description: Jamie Smith — Principal Engineer. Projects and open source work.
+---
+
+<main class="site-main">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-text">
+        <p class="header-label"><span class="prompt">$</span> ls --sort=date ./</p>
+        <h1 class="header-title">jsmithedin</h1>
+        <p class="header-subtitle">Principal engineer. AWS &amp; Python. Applied AI in energy &amp; utilities.</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-value">{{ collections.post | length }}</span>
+          <span class="stat-label">posts</span>
+        </div>
+        <div class="stat-divider">/</div>
+        <div class="stat">
+          <span class="stat-value">{{ repos | length }}</span>
+          <span class="stat-label">repos</span>
+        </div>
+        <div class="stat-divider">/</div>
+        <div class="stat">
+          <span class="stat-value">Edinburgh</span>
+          <span class="stat-label">location</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="repos-section">
+    <div class="section-heading">
+      <span class="section-label"><span class="prompt">$</span> tail -3 ./posts/</span>
+      <a href="/blog/" class="section-link"><i class="ti ti-arrow-right" aria-hidden="true"></i> all posts</a>
+    </div>
+    <div class="blog-preview">
+      {% for post in collections.post | reverse | limit(3) %}
+      <a href="{{ post.url }}" class="blog-row">
+        <div class="blog-row-inner">
+          <span class="blog-row-title">{{ post.data.title }}</span>
+          <div class="blog-row-meta">
+            <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> {{ post.data.date | formatDate }}</span>
+            <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> {{ post.content | readingTime }} min</span>
+          </div>
+        </div>
+        <span class="blog-row-desc">{{ post.data.description }}</span>
+        <div class="badges">
+          {% for tag in post.data.tags | displayTags %}
+          <span class="badge badge-topic">{{ tag }}</span>
+          {% endfor %}
+        </div>
+      </a>
+      {% endfor %}
+    </div>
+  </section>
+
+  <section class="repos-section">
+    <div class="section-heading">
+      <span class="section-label"><span class="prompt">$</span> ls --sort=date ./projects/</span>
+    </div>
+    <div class="repo-grid" aria-label="Project repositories">
+      {% for repo in repos %}
+      <article class="repo-card">
+        <div class="card-header">
+          <a href="{{ repo.html_url }}" class="card-title" target="_blank" rel="noopener">{{ repo.name }}</a>
+          <div class="card-links">
+            {% if repo.homepage %}
+            <a href="{{ repo.homepage }}" class="card-link external" target="_blank" rel="noopener">
+              <i class="ti ti-external-link" aria-hidden="true"></i> live</a>
+            {% endif %}
+            <a href="{{ repo.html_url }}" class="card-link" target="_blank" rel="noopener">
+              <i class="ti ti-brand-github" aria-hidden="true"></i> source</a>
+          </div>
+        </div>
+        <p class="card-desc">{{ repo.description }}</p>
+        <div class="card-footer">
+          <div class="badges">
+            {% if repo.language %}
+            <span class="badge {{ repo.language | languageClass }}">{{ repo.language }}</span>
+            {% endif %}
+            {% for topic in repo.topics %}
+            <span class="badge badge-topic">{{ topic }}</span>
+            {% endfor %}
+          </div>
+          <div class="card-meta">
+            {% if repo.stargazers_count %}
+            <span class="meta-item"><i class="ti ti-star" aria-hidden="true"></i> {{ repo.stargazers_count }}</span>
+            {% endif %}
+            <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> {{ repo.updated }}</span>
+          </div>
+        </div>
+      </article>
+      {% endfor %}
+    </div>
+  </section>
+</main>
