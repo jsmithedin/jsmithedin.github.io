@@ -1,0 +1,23 @@
+---
+layout: base.njk
+---
+<main class="site-main">
+  <div class="post-header">
+    <a href="/blog/" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> all posts</a>
+    <p class="header-label"><span class="prompt">$</span> cat ./posts/{{ slug }}.md</p>
+    <h1 class="post-title">{{ title }}</h1>
+    <div class="post-meta-bar">
+      <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> {{ date | formatDate }}</span>
+      <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> {{ content | readingTime }} min read</span>
+      <div class="badges">
+        {% for tag in tags | displayTags %}
+        <span class="badge badge-topic">{{ tag }}</span>
+        {% endfor %}
+      </div>
+    </div>
+    <p class="post-description">{{ description }}</p>
+  </div>
+  <article class="post-content">
+    {{ content | safe }}
+  </article>
+</main>
