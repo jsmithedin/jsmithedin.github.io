@@ -1,0 +1,14 @@
+{
+  "name": "jsmithedin-site",
+  "version": "1.0.0",
+  "private": true,
+  "scripts": {
+    "build": "eleventy",
+    "serve": "eleventy --serve"
+  },
+  "dependencies": {
+    "@11ty/eleventy": "^3.0.0",
+    "@11ty/eleventy-fetch": "^5.0.0",
+    "markdown-it": "^14.0.0"
+  }
+}
