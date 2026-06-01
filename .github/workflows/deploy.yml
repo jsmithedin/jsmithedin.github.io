@@ -2,7 +2,7 @@ name: Build and deploy portfolio
 
 on:
   schedule:
-    - cron: "0 6 * * 1"   # Every Monday 06:00 UTC
+    - cron: "0 6 * * 1"
   push:
     branches: [main]
   workflow_dispatch:
@@ -17,21 +17,26 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - uses: actions/setup-python@v5
+      - uses: actions/setup-node@v4
         with:
-          python-version: "3.12"
+          node-version: "20"
+          cache: "npm"
 
       - name: Install dependencies
-        run: pip install -r requirements.txt
+        run: npm ci
+
+      - name: Bust fetch cache on scheduled runs
+        if: github.event_name == 'schedule'
+        run: rm -rf .cache
 
       - name: Build site
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
-        run: python build.py
+        run: npx eleventy
 
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v4
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./output
+          publish_dir: ./_site
           cname: jamielab.uk
