@@ -1,14 +1,14 @@
 # jsmithedin.github.io
 
-Personal project portfolio, auto-generated from GitHub repos and served at [jamielab.uk](https://jamielab.uk).
+Personal project portfolio and blog, served at [jamielab.uk](https://jamielab.uk).
 
 ## How it works
 
-`build.py` fetches all non-fork repos via the GitHub API, generates a static `index.html`, and GitHub Actions deploys it to GitHub Pages.
+[Eleventy (11ty)](https://www.11ty.dev/) builds the site from Nunjucks templates. `_data/repos.js` fetches all non-fork repos via the GitHub API (cached 24h). Posts in `posts/*.md` are rendered at `/blog/:slug/`. GitHub Actions deploys the output to GitHub Pages.
 
 The site rebuilds:
 - On every push to `main`
-- Every Monday at 06:00 UTC
+- Every Monday at 06:00 UTC (to pick up fresh repo data)
 - Manually via the Actions tab (workflow_dispatch)
 
 ## Setup
@@ -35,30 +35,41 @@ Add these DNS records with your registrar:
 | A     | @    | 185.199.111.153      |
 | CNAME | www  | jsmithedin.github.io |
 
-The `cname: jamielab.uk` line in the workflow writes a `CNAME` file on each deploy, so you don't need to keep re-entering it in Settings.
+The `cname: jamielab.uk` line in the workflow writes a `CNAME` file on each deploy.
 
 ### 4. Run locally
 
 ```bash
-pip install requests
+npm install
 export GITHUB_TOKEN=ghp_yourtoken   # optional, avoids rate limits
-python build.py
-open output/index.html
+npm run build        # outputs to _site/
+npm run serve        # live-reload dev server at http://localhost:8080
 ```
 
-## Adding a blog
+## Adding a blog post
 
-When ready, uncomment the blog link in `build.py`:
+Create a Markdown file in `posts/`:
 
-```python
-NAV_LINKS = [
-    ...
-    {"label": "blog", "url": "/blog", "icon": "ti-pencil"},
-]
+```
+posts/YYYY-MM-DD-your-post-slug.md
 ```
 
-Then add a `blog/` directory to `output/` with its own `index.html`.
+Frontmatter:
 
-## Customising the about text
+```yaml
+---
+title: "Your post title"
+date: 2026-06-01
+tags: [aws, python]
+description: "One-sentence summary."
+---
+```
 
-Edit the `header-subtitle` content in `render_html()` inside `build.py`.
+The date prefix is stripped from the URL — the post will be available at `/blog/your-post-slug/`.
+
+## Customising
+
+- **Subtitle / about text** — edit `index.njk` and `blog.njk`
+- **Nav links** — edit `_includes/base.njk`
+- **Styles** — edit `css/style.css`
+- **Repo filter / data shape** — edit `_data/repos.js`
