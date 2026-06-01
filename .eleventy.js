@@ -1,4 +1,5 @@
 const fs = require("fs");
+const path = require("path");
 const markdownIt = require("markdown-it");
 
 const LANG_MAP = {
@@ -16,12 +17,12 @@ module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("js");
 
   // Inline file contents into <style> and <script> tags
-  eleventyConfig.addShortcode("inlineCSS", () => fs.readFileSync("css/style.css", "utf8"));
-  eleventyConfig.addShortcode("inlineJS", () => fs.readFileSync("js/main.js", "utf8"));
+  eleventyConfig.addShortcode("inlineCSS", () => fs.readFileSync(path.join(__dirname, "css/style.css"), "utf8"));
+  eleventyConfig.addShortcode("inlineJS", () => fs.readFileSync(path.join(__dirname, "js/main.js"), "utf8"));
 
   // Filters
   eleventyConfig.addFilter("limit", (arr, n) => (arr || []).slice(0, n));
-  eleventyConfig.addFilter("isoDate", (date) => new Date(date).toISOString());
+  eleventyConfig.addFilter("isoDate", (date) => date ? new Date(date).toISOString() : "");
   eleventyConfig.addFilter("formatDate", (date) =>
     new Date(date).toLocaleDateString("en-GB", {
       day: "2-digit",
@@ -52,8 +53,13 @@ module.exports = function (eleventyConfig) {
     return `<div class="code-block">${langLabel}<pre><code>${escaped}</code></pre></div>\n`;
   };
 
-  md.renderer.rules.code_inline = (tokens, idx) =>
-    `<code class="inline-code">${tokens[idx].content}</code>`;
+  md.renderer.rules.code_inline = (tokens, idx) => {
+    const escaped = tokens[idx].content
+      .replace(/&/g, "&amp;")
+      .replace(/</g, "&lt;")
+      .replace(/>/g, "&gt;");
+    return `<code class="inline-code">${escaped}</code>`;
+  };
 
   md.renderer.rules.paragraph_open = (tokens, idx, options, env, self) => {
     tokens[idx].attrSet("class", "post-p");
