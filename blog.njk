@@ -1,0 +1,46 @@
+---
+layout: base.njk
+permalink: /blog/
+title: blog — jsmithedin
+description: Technical writing on AWS, Python, applied AI, and consulting.
+---
+
+<main class="site-main">
+  <header class="site-header">
+    <div class="header-inner">
+      <div class="header-text">
+        <p class="header-label"><span class="prompt">$</span> ls -lt ./posts/</p>
+        <h1 class="header-title">writing</h1>
+        <p class="header-subtitle">AWS, Python, applied AI, consulting. Mostly things I wish I'd found written down.</p>
+      </div>
+      <div class="header-stats">
+        <div class="stat">
+          <span class="stat-value">{{ collections.post | length }}</span>
+          <span class="stat-label">posts</span>
+        </div>
+      </div>
+    </div>
+  </header>
+
+  <section class="blog-list" aria-label="Blog posts">
+    {% for post in collections.post | reverse %}
+    <a href="{{ post.url }}" class="blog-row">
+      <div class="blog-row-main">
+        <span class="blog-row-title">{{ post.data.title }}</span>
+        <span class="blog-row-desc">{{ post.data.description }}</span>
+      </div>
+      <div class="blog-row-meta">
+        <div class="badges">
+          {% for tag in post.data.tags | displayTags %}
+          <span class="badge badge-topic">{{ tag }}</span>
+          {% endfor %}
+        </div>
+        <div class="blog-row-stats">
+          <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> {{ post.data.date | formatDate }}</span>
+          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> {{ post.content | readingTime }} min</span>
+        </div>
+      </div>
+    </a>
+    {% endfor %}
+  </section>
+</main>
