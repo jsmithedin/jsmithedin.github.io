@@ -15,6 +15,7 @@ const LANG_MAP = {
 module.exports = function (eleventyConfig) {
   eleventyConfig.addPassthroughCopy("css");
   eleventyConfig.addPassthroughCopy("js");
+  eleventyConfig.addPassthroughCopy("images");
 
   // Inline file contents into <style> and <script> tags
   eleventyConfig.addShortcode("inlineCSS", () => fs.readFileSync(path.join(__dirname, "css/style.css"), "utf8"));

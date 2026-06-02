@@ -4,6 +4,7 @@ date: 2026-06-02
 tags: [ai, RAG, House of Knowledge]
 description: "Part 1 of a series on building a real RAG system with real data - 
 cheap as possible, no fancy GPU, hardly any RAM and to be honest totally unsuitable hardware."
+image: /images/posts/house-of-knowledge-ui.png
 ---
 
 # Building The House of Knowledge: RAG on a Budget
@@ -134,6 +135,8 @@ Token usage is tracked in a local SQLite database after every query, with monthl
 Notes live in Obsidian on iCloud. A script on my laptop pushes the vault to the NUC over rsync and kicks off reindexing. The Docker container runs the full local stack: BGE-M3 embeds notes on CPU, ChromaDB stores the vectors on disk. When a question comes in through the Streamlit UI, the query gets embedded locally, ChromaDB retrieves the nearest chunks, and those chunks along with the question and the last 8 messages of conversation history go to AWS Bedrock for generation.
 
 The Streamlit UI has a chat interface, a model selector, a mode toggle for standard vs agentic RAG (more on that later), and filters by arc, session, and tag. Citations in the response link back to the Quartz wiki. The whole thing runs inside Docker, and a later post will cover getting it accessible from outside the house without a static IP.
+
+![House of Knowledge UI](/images/posts/house-of-knowledge-ui.png)
 
 ---
 
