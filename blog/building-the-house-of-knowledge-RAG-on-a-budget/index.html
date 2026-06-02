@@ -14,11 +14,17 @@
   <meta property="og:type" content="article">
   <meta property="og:url" content="https://jamielab.uk/blog/building-the-house-of-knowledge-RAG-on-a-budget/">
   
+  <meta property="og:image" content="https://jamielab.uk/images/posts/house-of-knowledge-ui.png">
+  
+  
   <meta property="article:published_time" content="2026-06-02T00:00:00.000Z">
   
-  <meta name="twitter:card" content="summary">
+  <meta name="twitter:card" content="summary_large_image">
   <meta name="twitter:title" content="Building The House of Knowledge: RAG on a Budget">
   <meta name="twitter:description" content="Part 1 of a series on building a real RAG system with real data - cheap as possible, no fancy GPU, hardly any RAM and to be honest totally unsuitable hardware.">
+  
+  <meta name="twitter:image" content="https://jamielab.uk/images/posts/house-of-knowledge-ui.png">
+  
   <style>:root {
   --bg: #0d0d0d;
   --bg-surface: #141414;
@@ -746,6 +752,7 @@ tags:
 <h2 class="post-h2">The full architecture</h2>
 <p class="post-p">Notes live in Obsidian on iCloud. A script on my laptop pushes the vault to the NUC over rsync and kicks off reindexing. The Docker container runs the full local stack: BGE-M3 embeds notes on CPU, ChromaDB stores the vectors on disk. When a question comes in through the Streamlit UI, the query gets embedded locally, ChromaDB retrieves the nearest chunks, and those chunks along with the question and the last 8 messages of conversation history go to AWS Bedrock for generation.</p>
 <p class="post-p">The Streamlit UI has a chat interface, a model selector, a mode toggle for standard vs agentic RAG (more on that later), and filters by arc, session, and tag. Citations in the response link back to the Quartz wiki. The whole thing runs inside Docker, and a later post will cover getting it accessible from outside the house without a static IP.</p>
+<p class="post-p"><img src="/images/posts/house-of-knowledge-ui.png" alt="House of Knowledge UI"></p>
 <hr class="post-hr">
 <h2 class="post-h2">Does it work though?</h2>
 <p class="post-p">The group’s first proper test question was: <em>“Who is the most untrustworthy member of the party?”</em></p>
@@ -772,7 +779,7 @@ tags:
 
   <footer class="site-footer">
     <p class="footer-text">
-      <span class="prompt">$</span> built 2026-06-02 20:28 UTC &mdash;
+      <span class="prompt">$</span> built 2026-06-02 20:49 UTC &mdash;
       <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
     </p>
   </footer>
