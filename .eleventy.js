@@ -47,10 +47,11 @@ module.exports = function (eleventyConfig) {
 
   md.renderer.rules.fence = (tokens, idx) => {
     const lang = (tokens[idx].info || "").trim();
-    const langLabel = lang ? `<span class="code-lang">${lang}</span>` : "";
+    const escapedLang = lang.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
+    const langLabel = lang ? `<span class="code-lang">${escapedLang}</span>` : "";
     let highlighted;
     if (lang && hljs.getLanguage(lang)) {
-      highlighted = hljs.highlight(tokens[idx].content, { language: lang }).value;
+      highlighted = hljs.highlight(tokens[idx].content, { language: lang, ignoreIllegals: true }).value;
     } else {
       highlighted = hljs.highlightAuto(tokens[idx].content).value;
     }
