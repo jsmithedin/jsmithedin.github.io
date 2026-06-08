@@ -585,6 +585,7 @@ body::after {
 
 .code-block code.hljs {
   background: var(--bg-surface);
+  padding: 0;
 }
 
 .code-lang {
