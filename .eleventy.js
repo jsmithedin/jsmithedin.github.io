@@ -1,6 +1,7 @@
 const fs = require("fs");
 const path = require("path");
 const markdownIt = require("markdown-it");
+const hljs = require("highlight.js");
 
 const LANG_MAP = {
   Python: "lang-python",
@@ -47,11 +48,13 @@ module.exports = function (eleventyConfig) {
   md.renderer.rules.fence = (tokens, idx) => {
     const lang = (tokens[idx].info || "").trim();
     const langLabel = lang ? `<span class="code-lang">${lang}</span>` : "";
-    const escaped = tokens[idx].content
-      .replace(/&/g, "&amp;")
-      .replace(/</g, "&lt;")
-      .replace(/>/g, "&gt;");
-    return `<div class="code-block">${langLabel}<pre><code>${escaped}</code></pre></div>\n`;
+    let highlighted;
+    if (lang && hljs.getLanguage(lang)) {
+      highlighted = hljs.highlight(tokens[idx].content, { language: lang }).value;
+    } else {
+      highlighted = hljs.highlightAuto(tokens[idx].content).value;
+    }
+    return `<div class="code-block">${langLabel}<pre><code class="hljs">${highlighted}</code></pre></div>\n`;
   };
 
   md.renderer.rules.code_inline = (tokens, idx) => {
