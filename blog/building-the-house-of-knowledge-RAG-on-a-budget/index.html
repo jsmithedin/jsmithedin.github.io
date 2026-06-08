@@ -607,8 +607,12 @@ body::after {
 .code-block code {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: #c8f0c8;
   line-height: 1.6;
+}
+
+.code-block code.hljs {
+  background: var(--bg-surface);
+  padding: 0;
 }
 
 .code-lang {
@@ -633,7 +637,128 @@ body::after {
   border-radius: 2px;
   border: 1px solid var(--border);
 }
+
+/* ── Syntax highlighting (highlight.js github-dark) ── */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}
 </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="a43298d8-e577-4567-bf64-8cf6bf0a620b"></script>
 </head>
 <body>
   <nav class="site-nav">
@@ -701,18 +826,18 @@ body::after {
 <h2 class="post-h2">The data: what we’re working with</h2>
 <p class="post-p">The notes live in an Obsidian vault on iCloud, shared across the whole group so everyone can contribute edits between sessions. They’re also published to a Quartz static site on GitHub Pages.</p>
 <p class="post-p">The vault covers several categories: Sessions, People, Places, Organisations, Factions, Bad Guys, Monsters, Props. Session notes carry the most information: what happened, who was there, what was said, what decisions were made, and what loose threads are now dangling. The older session notes are rougher; we weren’t as diligent back then. All now have a consistent structure with a YAML frontmatter block:</p>
-<div class="code-block"><span class="code-lang">yaml</span><pre><code>---
-date: 2026-05-26
-title: 2026-05-26
-session: 38
-tags:
-  - neverdeath
-  - raven-queen
-  - kyusse-nihal
-  - jorund-arc
-  - ultrin-arc
----
-</code></pre></div>
+<div class="code-block"><span class="code-lang">yaml</span><pre><code class="hljs"><span class="hljs-meta">---</span>
+<span class="hljs-attr">date:</span> <span class="hljs-number">2026-05-26</span>
+<span class="hljs-attr">title:</span> <span class="hljs-number">2026-05-26</span>
+<span class="hljs-attr">session:</span> <span class="hljs-number">38</span>
+<span class="hljs-attr">tags:</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">neverdeath</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">raven-queen</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">kyusse-nihal</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">jorund-arc</span>
+  <span class="hljs-bullet">-</span> <span class="hljs-string">ultrin-arc</span>
+<span class="hljs-meta">---
+</span></code></pre></div>
 <p class="post-p">The tags track story arcs. This matters for filtering: if someone wants to know what’s happened in the Jorund arc specifically, they don’t want chunks from sessions where Jorund barely appeared. The metadata makes scoped queries possible without rewriting the retrieval logic.</p>
 <p class="post-p">Getting notes onto the NUC is done with an <code class="inline-code">rsync</code> script that runs from my laptop, pushes the vault over SSH, and triggers reindexing. It’s a manual trigger: no file watching, no automation. That’s deliberate. The notes don’t change that often, and I’d rather run the sync intentionally than have it kick off unexpectedly. The reindex noise alone is reason enough.</p>
 <hr class="post-hr">
@@ -787,7 +912,7 @@ tags:
 
   <footer class="site-footer">
     <p class="footer-text">
-      <span class="prompt">$</span> built 2026-06-08 18:39 UTC &mdash;
+      <span class="prompt">$</span> built 2026-06-08 19:23 UTC &mdash;
       <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
     </p>
   </footer>

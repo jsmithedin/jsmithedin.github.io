@@ -607,8 +607,12 @@ body::after {
 .code-block code {
   font-family: var(--font-mono);
   font-size: 13px;
-  color: #c8f0c8;
   line-height: 1.6;
+}
+
+.code-block code.hljs {
+  background: var(--bg-surface);
+  padding: 0;
 }
 
 .code-lang {
@@ -633,7 +637,128 @@ body::after {
   border-radius: 2px;
   border: 1px solid var(--border);
 }
+
+/* ── Syntax highlighting (highlight.js github-dark) ── */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}
 </style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="a43298d8-e577-4567-bf64-8cf6bf0a620b"></script>
 </head>
 <body>
   <nav class="site-nav">
@@ -684,71 +809,71 @@ body::after {
 <h2 class="post-h2">The problem</h2>
 <p class="post-p">The early versions of this project called <code class="inline-code">invoke_model</code> directly. This is the low-level Bedrock API: you serialise a JSON body, POST it, and parse the response. Simple enough, until you want to use two different model families.</p>
 <p class="post-p">Here’s what calling Nova Lite looked like:</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>body = {
-    "messages": [
-        {"role": "user", "content": [{"text": user_message}]},
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs">body = {
+    <span class="hljs-string">&quot;messages&quot;</span>: [
+        {<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: user_message}]},
     ],
-    "system": [{"text": system_prompt}],
-    "inferenceConfig": {"maxTokens": 2048, "temperature": 0.3},
+    <span class="hljs-string">&quot;system&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: system_prompt}],
+    <span class="hljs-string">&quot;inferenceConfig&quot;</span>: {<span class="hljs-string">&quot;maxTokens&quot;</span>: <span class="hljs-number">2048</span>, <span class="hljs-string">&quot;temperature&quot;</span>: <span class="hljs-number">0.3</span>},
 }
 response = client.invoke_model(modelId=model_id, body=json.dumps(body))
-result = json.loads(response["body"].read())
-text = result["output"]["message"]["content"][0]["text"]
-input_tokens = result["usage"]["inputTokens"]  # camelCase
+result = json.loads(response[<span class="hljs-string">&quot;body&quot;</span>].read())
+text = result[<span class="hljs-string">&quot;output&quot;</span>][<span class="hljs-string">&quot;message&quot;</span>][<span class="hljs-string">&quot;content&quot;</span>][<span class="hljs-number">0</span>][<span class="hljs-string">&quot;text&quot;</span>]
+input_tokens = result[<span class="hljs-string">&quot;usage&quot;</span>][<span class="hljs-string">&quot;inputTokens&quot;</span>]  <span class="hljs-comment"># camelCase</span>
 </code></pre></div>
 <p class="post-p">And here’s what calling Haiku looked like:</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>body = {
-    "messages": [
-        {"role": "user", "content": [{"type": "text", "text": user_message}]},
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs">body = {
+    <span class="hljs-string">&quot;messages&quot;</span>: [
+        {<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;text&quot;</span>, <span class="hljs-string">&quot;text&quot;</span>: user_message}]},
     ],
-    "system": [{"type": "text", "text": system_prompt}],
-    "max_tokens": 2048,
-    "anthropic_version": "bedrock-2023-05-31",
+    <span class="hljs-string">&quot;system&quot;</span>: [{<span class="hljs-string">&quot;type&quot;</span>: <span class="hljs-string">&quot;text&quot;</span>, <span class="hljs-string">&quot;text&quot;</span>: system_prompt}],
+    <span class="hljs-string">&quot;max_tokens&quot;</span>: <span class="hljs-number">2048</span>,
+    <span class="hljs-string">&quot;anthropic_version&quot;</span>: <span class="hljs-string">&quot;bedrock-2023-05-31&quot;</span>,
 }
 response = client.invoke_model(modelId=model_id, body=json.dumps(body))
-result = json.loads(response["body"].read())
-text = result["content"][0]["text"]            # different path
-input_tokens = result["usage"]["input_tokens"] # snake_case
+result = json.loads(response[<span class="hljs-string">&quot;body&quot;</span>].read())
+text = result[<span class="hljs-string">&quot;content&quot;</span>][<span class="hljs-number">0</span>][<span class="hljs-string">&quot;text&quot;</span>]            <span class="hljs-comment"># different path</span>
+input_tokens = result[<span class="hljs-string">&quot;usage&quot;</span>][<span class="hljs-string">&quot;input_tokens&quot;</span>] <span class="hljs-comment"># snake_case</span>
 </code></pre></div>
 <p class="post-p">Different content block shape, response path and token key casing. I ended up with two different implementations, one for each model family.</p>
 <p class="post-p">If the goal is to compare models, this is annoying. Adding a third model means writing a third client. The integration layer grows with every model you try, which is exactly the wrong way round when the whole point is to swap freely.</p>
 <hr class="post-hr">
 <h2 class="post-h2">The Converse API</h2>
 <p class="post-p">The Converse API is <code class="inline-code">client.converse()</code> instead of <code class="inline-code">client.invoke_model()</code>. AWS introduced it to put a unified interface over all Bedrock-hosted generation models. The same request shape, the same response structure, regardless of what’s running underneath.</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>response = client.converse(
-    modelId=model_id,  # the only thing that changes
-    system=[{"text": system_prompt}],
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs">response = client.converse(
+    modelId=model_id,  <span class="hljs-comment"># the only thing that changes</span>
+    system=[{<span class="hljs-string">&quot;text&quot;</span>: system_prompt}],
     messages=[
-        {"role": "user", "content": [{"text": user_message}]},
+        {<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: user_message}]},
     ],
-    inferenceConfig={"maxTokens": 2048},
+    inferenceConfig={<span class="hljs-string">&quot;maxTokens&quot;</span>: <span class="hljs-number">2048</span>},
 )
 
-message = response["output"]["message"]
-text = message["content"][0]["text"]
-input_tokens = response["usage"]["inputTokens"]
-output_tokens = response["usage"]["outputTokens"]
+message = response[<span class="hljs-string">&quot;output&quot;</span>][<span class="hljs-string">&quot;message&quot;</span>]
+text = message[<span class="hljs-string">&quot;content&quot;</span>][<span class="hljs-number">0</span>][<span class="hljs-string">&quot;text&quot;</span>]
+input_tokens = response[<span class="hljs-string">&quot;usage&quot;</span>][<span class="hljs-string">&quot;inputTokens&quot;</span>]
+output_tokens = response[<span class="hljs-string">&quot;usage&quot;</span>][<span class="hljs-string">&quot;outputTokens&quot;</span>]
 </code></pre></div>
 <p class="post-p">To switch from Nova Lite to Haiku 4.5, you change <code class="inline-code">modelId</code>. Nothing else. The project wires this through an environment variable, <code class="inline-code">BEDROCK_MODEL_ID</code>, defaulting to <code class="inline-code">amazon.nova-lite-v1:0</code>. The Streamlit app passes it to <code class="inline-code">BedrockClient.__init__</code>. That’s the entire model-switching mechanism.</p>
 <p class="post-p">The <code class="inline-code">BedrockClient</code> class in the project is deliberately thin:</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>class BedrockClient:
-    """Bedrock Runtime client using the unified Converse API."""
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs"><span class="hljs-keyword">class</span> <span class="hljs-title class_">BedrockClient</span>:
+    <span class="hljs-string">&quot;&quot;&quot;Bedrock Runtime client using the unified Converse API.&quot;&quot;&quot;</span>
 
-    def __init__(self, model_id: str, region: str):
-        self.model_id = model_id
-        self._client = boto3.client("bedrock-runtime", region_name=region)
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">__init__</span>(<span class="hljs-params">self, model_id: <span class="hljs-built_in">str</span>, region: <span class="hljs-built_in">str</span></span>):
+        <span class="hljs-variable language_">self</span>.model_id = model_id
+        <span class="hljs-variable language_">self</span>._client = boto3.client(<span class="hljs-string">&quot;bedrock-runtime&quot;</span>, region_name=region)
 
-    def invoke(self, system_prompt: str, user_message: str) -&gt; InvokeResult:
-        response = self._client.converse(
-            modelId=self.model_id,
-            system=[{"text": system_prompt}],
-            messages=[{"role": "user", "content": [{"text": user_message}]}],
-            inferenceConfig={"maxTokens": 2048},
+    <span class="hljs-keyword">def</span> <span class="hljs-title function_">invoke</span>(<span class="hljs-params">self, system_prompt: <span class="hljs-built_in">str</span>, user_message: <span class="hljs-built_in">str</span></span>) -&gt; InvokeResult:
+        response = <span class="hljs-variable language_">self</span>._client.converse(
+            modelId=<span class="hljs-variable language_">self</span>.model_id,
+            system=[{<span class="hljs-string">&quot;text&quot;</span>: system_prompt}],
+            messages=[{<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: user_message}]}],
+            inferenceConfig={<span class="hljs-string">&quot;maxTokens&quot;</span>: <span class="hljs-number">2048</span>},
         )
-        message = response["output"]["message"]
+        message = response[<span class="hljs-string">&quot;output&quot;</span>][<span class="hljs-string">&quot;message&quot;</span>]
         input_tokens, output_tokens = _usage_tokens(response)
-        return InvokeResult(
-            text=_extract_text(message["content"]),
+        <span class="hljs-keyword">return</span> InvokeResult(
+            text=_extract_text(message[<span class="hljs-string">&quot;content&quot;</span>]),
             input_tokens=input_tokens,
             output_tokens=output_tokens,
         )
@@ -758,24 +883,24 @@ output_tokens = response["usage"]["outputTokens"]
 <h2 class="post-h2">Conversation history</h2>
 <p class="post-p">The <code class="inline-code">messages</code> array supports proper multi-turn conversations: alternating <code class="inline-code">user</code> and <code class="inline-code">assistant</code> blocks, as many turns deep as you like (within the model’s context window). The current implementation doesn’t use this properly.</p>
 <p class="post-p">What it does instead is serialise recent history into the user message as plain text:</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>window = history[-self.chat_history_window:]
-for msg in window:
-    role = msg["role"].capitalize()
-    history_text += f"{role}: {msg['content']}\n"
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs">window = history[-<span class="hljs-variable language_">self</span>.chat_history_window:]
+<span class="hljs-keyword">for</span> msg <span class="hljs-keyword">in</span> window:
+    role = msg[<span class="hljs-string">&quot;role&quot;</span>].capitalize()
+    history_text += <span class="hljs-string">f&quot;<span class="hljs-subst">{role}</span>: <span class="hljs-subst">{msg[<span class="hljs-string">&#x27;content&#x27;</span>]}</span>\n&quot;</span>
 
-user_message = f"Conversation so far:\n{history_text}\nQuestion: {message}"
+user_message = <span class="hljs-string">f&quot;Conversation so far:\n<span class="hljs-subst">{history_text}</span>\nQuestion: <span class="hljs-subst">{message}</span>&quot;</span>
 </code></pre></div>
 <p class="post-p">It works. It’s also a bit of a hack; the model sees history as embedded context within a single turn rather than as a real conversation.</p>
 <p class="post-p">The difference does actually matter. Models are trained on conversational data with explicit role structure. When you pass history as proper <code class="inline-code">messages</code> turns, the model understands natively which content is its own prior output and which is the user’s input. Attention works the way it’s supposed to. Follow-up questions like “what else do you know about him?” or “expand on the last point” get resolved correctly because the model can trace “last point” back to a specific assistant turn.</p>
 <p class="post-p">With the plain-text approach, the model has to parse your formatting to infer turn boundaries, and the signal it gets about who said what is weaker. For simple single-turn queries it makes no practical difference. For a lore assistant where half the questions are follow-ups (“what happened after that?”, “you mentioned the Thornwood earlier, what’s the connection?”), it does.</p>
 <p class="post-p">The right implementation passes history as proper <code class="inline-code">messages</code> turns:</p>
-<div class="code-block"><span class="code-lang">python</span><pre><code>messages = []
-for msg in history[-self.chat_history_window:]:
+<div class="code-block"><span class="code-lang">python</span><pre><code class="hljs">messages = []
+<span class="hljs-keyword">for</span> msg <span class="hljs-keyword">in</span> history[-<span class="hljs-variable language_">self</span>.chat_history_window:]:
     messages.append({
-        "role": msg["role"],
-        "content": [{"text": msg["content"]}]
+        <span class="hljs-string">&quot;role&quot;</span>: msg[<span class="hljs-string">&quot;role&quot;</span>],
+        <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: msg[<span class="hljs-string">&quot;content&quot;</span>]}]
     })
-messages.append({"role": "user", "content": [{"text": user_message}]})
+messages.append({<span class="hljs-string">&quot;role&quot;</span>: <span class="hljs-string">&quot;user&quot;</span>, <span class="hljs-string">&quot;content&quot;</span>: [{<span class="hljs-string">&quot;text&quot;</span>: user_message}]})
 </code></pre></div>
 <p class="post-p">The window is capped at 8 messages; unbounded history would balloon token costs when I’m trying to be cheap. That constraint isn’t going anwyeher but I fixing the history serialisation is on my list.</p>
 <hr class="post-hr">
@@ -799,7 +924,7 @@ messages.append({"role": "user", "content": [{"text": user_message}]})
 
   <footer class="site-footer">
     <p class="footer-text">
-      <span class="prompt">$</span> built 2026-06-08 18:39 UTC &mdash;
+      <span class="prompt">$</span> built 2026-06-08 19:23 UTC &mdash;
       <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
     </p>
   </footer>
