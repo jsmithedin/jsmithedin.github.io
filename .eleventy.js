@@ -53,7 +53,10 @@ module.exports = function (eleventyConfig) {
     if (lang && hljs.getLanguage(lang)) {
       highlighted = hljs.highlight(tokens[idx].content, { language: lang, ignoreIllegals: true }).value;
     } else {
-      highlighted = hljs.highlightAuto(tokens[idx].content).value;
+      highlighted = tokens[idx].content
+        .replace(/&/g, "&amp;")
+        .replace(/</g, "&lt;")
+        .replace(/>/g, "&gt;");
     }
     return `<div class="code-block">${langLabel}<pre><code class="hljs">${highlighted}</code></pre></div>\n`;
   };
