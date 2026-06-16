@@ -3,21 +3,27 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>blog — Jamie Smith</title>
-  <meta name="description" content="Technical writing on AWS, Python, applied AI, and other stuff.">
+  <title>Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel</title>
+  <meta name="description" content="Part 3 of the House of Knowledge series. The RAG system works locally — now to make it accessible from anywhere.  Without port forwarding, a VPS, or  spending more money.">
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600&display=swap" rel="stylesheet">
   <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
-  <meta property="og:title" content="blog — Jamie Smith">
-  <meta property="og:description" content="Technical writing on AWS, Python, applied AI, and other stuff.">
-  <meta property="og:type" content="website">
-  <meta property="og:url" content="https://jamielab.uk/blog/">
+  <meta property="og:title" content="Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel">
+  <meta property="og:description" content="Part 3 of the House of Knowledge series. The RAG system works locally — now to make it accessible from anywhere.  Without port forwarding, a VPS, or  spending more money.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jamielab.uk/blog/serving-the-house-of-knowledge/">
+  
+  <meta property="og:image" content="https://jamielab.uk/images/posts/mobile.jpeg">
   
   
-  <meta name="twitter:card" content="summary">
-  <meta name="twitter:title" content="blog — Jamie Smith">
-  <meta name="twitter:description" content="Technical writing on AWS, Python, applied AI, and other stuff.">
+  <meta property="article:published_time" content="2026-06-16T00:00:00.000Z">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel">
+  <meta name="twitter:description" content="Part 3 of the House of Knowledge series. The RAG system works locally — now to make it accessible from anywhere.  Without port forwarding, a VPS, or  spending more money.">
+  
+  <meta name="twitter:image" content="https://jamielab.uk/images/posts/mobile.jpeg">
   
   <style>:root {
   --bg: #0d0d0d;
@@ -767,103 +773,78 @@ code.hljs {
       </div>
     </div>
   </nav>
-  
-<main class="site-main">
-  <header class="site-header">
-    <div class="header-inner">
-      <div class="header-text">
-        <p class="header-label"><span class="prompt">$</span> ls -lt ./posts/</p>
-        <h1 class="header-title">writing</h1>
-        <p class="header-subtitle">AWS, Python, applied AI, other stuff. Mostly things I found vaguely interesting.</p>
-      </div>
-      <div class="header-stats">
-        <div class="stat">
-          <span class="stat-value">3</span>
-          <span class="stat-label">posts</span>
-        </div>
+  <main class="site-main">
+  <div class="post-header">
+    <a href="/blog/" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> all posts</a>
+    <p class="header-label"><span class="prompt">$</span> cat ./posts/serving-the-house-of-knowledge.md</p>
+    <h1 class="post-title">Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel</h1>
+    <div class="post-meta-bar">
+      <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 16 Jun 2026</span>
+      <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 4 min read</span>
+      <div class="badges">
+        
+        <span class="badge badge-topic">ai</span>
+        
+        <span class="badge badge-topic">RAG</span>
+        
+        <span class="badge badge-topic">House of Knowledge</span>
+        
+        <span class="badge badge-topic">cloudflare</span>
+        
+        <span class="badge badge-topic">docker</span>
+        
+        <span class="badge badge-topic">self-hosting</span>
+        
       </div>
     </div>
-  </header>
+    <p class="post-description">Part 3 of the House of Knowledge series. The RAG system works locally — now to make it accessible from anywhere.  Without port forwarding, a VPS, or  spending more money.</p>
+  </div>
+  <article class="post-content">
+    <h1 class="post-h1">Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel</h1>
+<p class="post-p"><em>Part 3 of the House of Knowledge series. <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-RAG-on-a-budget/" class="post-link">Part 1</a> covers the RAG system itself. <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-bedrock-api/" class="post-link">Part 2</a> covers the Bedrock Converse API.</em></p>
+<hr class="post-hr">
+<p class="post-p">The last post ended with the app running locally. Streamlit on a NUC in the home office, serving campaign lore reliably to anyone on my wifi. The problem is that D&amp;D doesn’t happen on my wifi. It usually happens at someone else’s place. The point of building this thing was to have it at the table.</p>
+<p class="post-p">So it needed to be reachable from a phone, over someone else’s network, without requiring anything to be installed on that phone first. This post is about how I solved that.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What I considered</h2>
+<p class="post-p">The constraints were simple enough: it had to work in a normal browser, it had to be free, and I wanted something reusable rather than a one-off fix that only serves Streamlit.</p>
+<p class="post-p"><strong>Port forwarding</strong> was the first thing I looked at. It works, but BT routers make it more painful than it needs to be, and you’d still need a DDNS service to get a stable domain on a dynamic IP. Annoying enough that I kept looking.</p>
+<p class="post-p"><strong>Tailscale</strong> is genuinely good and I’ve used it for other things. But it requires a client on every device that needs access. That’s fine for me; but not if I want to give anyone else access.</p>
+<p class="post-p"><strong>ngrok</strong> is quick to set up and works in a browser. The free tier gives you ephemeral URLs that change every restart, which rules it out as anything permanent.</p>
+<p class="post-p"><strong>Cloudflare Tunnel</strong> was the answer. <code class="inline-code">cloudflared</code> runs on your machine and maintains an outbound connection to Cloudflare’s edge.  Traffic arrives via a subdomain you control. There’s nothing to set up on my own network; no open ports, no router config. It’s free, and adding a second project to the same tunnel later is a dashboard change rather than starting over.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Setting up the tunnel</h2>
+<p class="post-p">You need a domain managed by Cloudflare. I already had one; if you don’t, buying one is cheap and easy.</p>
+<p class="post-p">The setup is in the dashboard under <strong>Zero Trust &gt; Networks &gt; Tunnels</strong>. Create a tunnel, name it, and Cloudflare generates a token. You tell it where to point — <code class="inline-code">http://localhost:8501</code>, where Streamlit listens — and it creates the DNS record. There’s no config file to write. The token carries everything.</p>
+<p class="post-p">The Docker Compose service looks like this:</p>
+<div class="code-block"><span class="code-lang">yaml</span><pre><code class="hljs"><span class="hljs-attr">services:</span>
+  <span class="hljs-attr">cloudflared:</span>
+    <span class="hljs-attr">image:</span> <span class="hljs-string">cloudflare/cloudflared:latest</span>
+    <span class="hljs-attr">restart:</span> <span class="hljs-string">always</span>
+    <span class="hljs-attr">command:</span> <span class="hljs-string">tunnel</span> <span class="hljs-string">run</span>
+    <span class="hljs-attr">environment:</span>
+      <span class="hljs-bullet">-</span> <span class="hljs-string">TUNNEL_TOKEN=${CLOUDFLARE_TUNNEL_TOKEN}</span>
+</code></pre></div>
+<p class="post-p">Token goes in a <code class="inline-code">.env</code> file alongside the compose file. That’s it.</p>
+<p class="post-p">I keep cloudflared in its own compose stack, separate from the RAG application. The tunnel doesn’t know or care what it’s proxying.  When I stick something else on the NUC, I can add a route in the dashboard and it’ll give access to that too. Bundling it with the app would mean dragging it through every app deployment. Keeping it separate means it just runs.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Locking it down</h2>
+<p class="post-p">Once the tunnel’s running, the subdomain is publicly reachable. For D&amp;D notes that’s not a serious problem but every query of the knowledge base costs me money on AI tokens. Cloudflare Access can be used for access control and it’s on their free plan.</p>
+<p class="post-p">Access sits in front of the tunnel and handles auth before anything reaches Streamlit. I set it up with Google as the identity provider so users can sign in with their Google account, meaning I don’t have to worry about storing credentials. The policy is currently restricted to only allow users from my own domain, but adding a player is just adding their email address to an allow-list rule. Removing them is deleting that entry.</p>
+<p class="post-p">The result is Google SSO on a home server with no open ports for £0/month.</p>
+<p class="post-p">This lives under <strong>Zero Trust &gt; Access &gt; Applications</strong>. The Cloudflare side is well documented and doesn’t take long.</p>
+<p class="post-p">The GCP side is a different story. Setting up Google as an identity provider means creating an OAuth application in Google Cloud Platform; a project, credentials, an OAuth consent screen. Cloudflare’s docs try to walk you through it, and they do a reasonable job. However the GCP setup is confusing, especially if you don’t already have an active GCP project. I’ve used GCP for years and it still took some working out.  There was some weirdness with me having Google Workspace for my mail etc but not a GCP project.  I ended up back on Stackoverflow, a novelty in the age of AI assistants, where a post I can no longer find walked me through what I was missing.  This took me back a few years to a simpler time…  Follow <a href="https://developers.cloudflare.com/cloudflare-one/identity/idp-integration/google/" class="post-link">Cloudflare’s guide</a> and expect it to take a while.</p>
+<p class="post-p">Once it’s working, it’s fine.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The result</h2>
+<p class="post-p"><img src="/images/posts/mobile.jpeg" alt="Mobile Knowledge"></p>
+<p class="post-p">Phone out, URL in the browser, answer back before the DM has finished the description. That’s it.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What’s next</h2>
+<p class="post-p">The House of Knowledge is only as good as the notes going into it. Raw session notes need work before they’re actually useful as source material.  The next post covers a Claude skill that takes a session note and adds structured summaries, open threads, NPC logs and arc tags automatically. One AI tidying up the data that feeds another.</p>
+<hr class="post-hr">
 
-  <section class="blog-list" aria-label="Blog posts">
-    
-    <a href="/blog/serving-the-house-of-knowledge/" class="blog-row">
-      <div class="blog-row-main">
-        <span class="blog-row-title">Opening the Doors: Serving the House of Knowledge over Cloudflare Tunnel</span>
-        <span class="blog-row-desc">Part 3 of the House of Knowledge series. The RAG system works locally — now to make it accessible from anywhere.  Without port forwarding, a VPS, or  spending more money.</span>
-      </div>
-      <div class="blog-row-meta">
-        <div class="badges">
-          
-          <span class="badge badge-topic">ai</span>
-          
-          <span class="badge badge-topic">RAG</span>
-          
-          <span class="badge badge-topic">House of Knowledge</span>
-          
-          <span class="badge badge-topic">cloudflare</span>
-          
-          <span class="badge badge-topic">docker</span>
-          
-          <span class="badge badge-topic">self-hosting</span>
-          
-        </div>
-        <div class="blog-row-stats">
-          <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 16 Jun 2026</span>
-          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 4 min</span>
-        </div>
-      </div>
-    </a>
-    
-    <a href="/blog/building-the-house-of-knowledge-bedrock-api/" class="blog-row">
-      <div class="blog-row-main">
-        <span class="blog-row-title">Building The House of Knowledge: The Bedrock Converse API</span>
-        <span class="blog-row-desc">Part 2 of a series on building a real RAG system with real data - The Bedrock Converse API.  A bit technical.</span>
-      </div>
-      <div class="blog-row-meta">
-        <div class="badges">
-          
-          <span class="badge badge-topic">ai</span>
-          
-          <span class="badge badge-topic">RAG</span>
-          
-          <span class="badge badge-topic">AWS</span>
-          
-          <span class="badge badge-topic">Python</span>
-          
-          <span class="badge badge-topic">House of Knowledge</span>
-          
-        </div>
-        <div class="blog-row-stats">
-          <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 08 Jun 2026</span>
-          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 7 min</span>
-        </div>
-      </div>
-    </a>
-    
-    <a href="/blog/building-the-house-of-knowledge-RAG-on-a-budget/" class="blog-row">
-      <div class="blog-row-main">
-        <span class="blog-row-title">Building The House of Knowledge: RAG on a Budget</span>
-        <span class="blog-row-desc">Part 1 of a series on building a real RAG system with real data - cheap as possible, no fancy GPU, hardly any RAM and to be honest totally unsuitable hardware.</span>
-      </div>
-      <div class="blog-row-meta">
-        <div class="badges">
-          
-          <span class="badge badge-topic">ai</span>
-          
-          <span class="badge badge-topic">RAG</span>
-          
-          <span class="badge badge-topic">House of Knowledge</span>
-          
-        </div>
-        <div class="blog-row-stats">
-          <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 02 Jun 2026</span>
-          <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 12 min</span>
-        </div>
-      </div>
-    </a>
-    
-  </section>
+  </article>
 </main>
 
   <footer class="site-footer">
