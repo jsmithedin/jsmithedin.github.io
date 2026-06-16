@@ -1,7 +1,7 @@
 ---
 title: "Building The House of Knowledge: The Bedrock Converse API"
 date: 2026-06-08
-tags: [ai, RAG, House of Knowledge]
+tags: [ai, RAG, AWS, Python, House of Knowledge]
 description: "Part 2 of a series on building a real RAG system with real data - 
 The Bedrock Converse API.  A bit technical."
 image: /images/posts/bedrock.png
