@@ -1,0 +1,1025 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building the House of Knowledge: Choosing Your Scholars</title>
+  <meta name="description" content="Part 6 of a series on building a real RAG system with real data. Nova Lite against Haiku 4.5, on a test set built to stop me picking the cheap one on reflex.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <meta property="og:title" content="Building the House of Knowledge: Choosing Your Scholars">
+  <meta property="og:description" content="Part 6 of a series on building a real RAG system with real data. Nova Lite against Haiku 4.5, on a test set built to stop me picking the cheap one on reflex.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jamielab.uk/blog/choosing-your-scholars/">
+  
+  <meta property="og:image" content="https://jamielab.uk/images/posts/scholars.png">
+  
+  
+  <meta property="article:published_time" content="2026-07-06T00:00:00.000Z">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Building the House of Knowledge: Choosing Your Scholars">
+  <meta name="twitter:description" content="Part 6 of a series on building a real RAG system with real data. Nova Lite against Haiku 4.5, on a test set built to stop me picking the cheap one on reflex.">
+  
+  <meta name="twitter:image" content="https://jamielab.uk/images/posts/scholars.png">
+  
+  <style>:root {
+  --bg: #0d0d0d;
+  --bg-surface: #141414;
+  --bg-card: #181818;
+  --bg-card-hover: #1e1e1e;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text-primary: #e8e6e0;
+  --text-secondary: #888880;
+  --text-muted: #555550;
+  --accent: #c8f542;
+  --accent-dim: #9bbf2e;
+  --prompt: #c8f542;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Syne", sans-serif;
+  --lang-python: #4c8eff;
+  --lang-ts: #3178c6;
+  --lang-js: #f7df1e;
+  --lang-js-text: #1a1a00;
+  --lang-rust: #ce6a30;
+  --lang-go: #00add8;
+  --lang-shell: #89d67c;
+  --lang-hcl: #7b42bc;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-brand:hover { color: var(--accent); transition: color 0.15s; }
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: var(--accent); }
+.nav-link .ti { font-size: 15px; }
+
+/* ── Header ── */
+.site-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.site-header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 36ch;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-divider {
+  color: var(--border);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* ── Grid ── */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+/* ── Card ── */
+.repo-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.repo-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.repo-card:hover { background: var(--bg-card-hover); }
+.repo-card:hover::before { height: 100%; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+  transition: color 0.15s;
+  flex: 1;
+}
+
+.card-title:hover { color: var(--accent); }
+
+.card-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.card-link:hover { color: var(--accent); }
+.card-link .ti { font-size: 13px; }
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge-topic {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  color: var(--text-muted);
+}
+
+.lang-python  { background: rgba(76, 142, 255, 0.15); color: var(--lang-python); }
+.lang-ts      { background: rgba(49, 120, 198, 0.15); color: var(--lang-ts); }
+.lang-js      { background: rgba(247, 223, 30, 0.15);  color: #c9b500; }
+.lang-rust    { background: rgba(206, 106, 48, 0.15);  color: var(--lang-rust); }
+.lang-go      { background: rgba(0, 173, 216, 0.15);   color: var(--lang-go); }
+.lang-shell   { background: rgba(137, 214, 124, 0.15); color: var(--lang-shell); }
+.lang-hcl     { background: rgba(123, 66, 188, 0.15);  color: var(--lang-hcl); }
+.lang-other   { background: transparent; border: 1px solid var(--border-hover); color: var(--text-muted); }
+
+.card-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.meta-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.meta-item .ti { font-size: 12px; }
+
+/* ── Prompt accent ── */
+.prompt { color: var(--prompt); }
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.footer-link:hover { color: var(--accent); }
+
+/* ── Scanline overlay ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 9999;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .nav-inner { padding: 0 1rem; }
+  .site-main { padding: 0 1rem 3rem; }
+  .site-header { padding: 2.5rem 0 2rem; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .header-stats { flex-direction: row; }
+  .stat { align-items: flex-start; }
+  .repo-grid { grid-template-columns: 1fr; }
+  .site-footer { padding: 1.5rem 1rem; }
+}
+
+/* ── Section headings (homepage) ── */
+.repos-section { margin-bottom: 3rem; }
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.section-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.section-link:hover { color: var(--accent); }
+
+/* ── Blog listing ── */
+.blog-preview {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  position: relative;
+  cursor: pointer;
+}
+
+.blog-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.blog-row:hover { background: var(--bg-card-hover); }
+.blog-row:hover::before { height: 100%; }
+.blog-row:last-child { border-bottom: none; }
+
+.blog-row-main { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.blog-row-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.blog-row-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  transition: color 0.15s;
+}
+
+.blog-row:hover .blog-row-title { color: var(--accent); }
+
+.blog-row-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.blog-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.blog-row-stats { display: flex; gap: 1rem; }
+
+/* ── Post page ── */
+.post-header {
+  padding: 3.5rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+  max-width: 68ch;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.back-link:hover { color: var(--accent); }
+
+.post-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0.75rem 0 1rem;
+}
+
+.post-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.post-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  border-left: 2px solid var(--border-hover);
+  padding-left: 1rem;
+  margin-top: 1rem;
+}
+
+/* ── Post content ── */
+.post-content { max-width: 68ch; }
+
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.post-h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 2.5rem 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.post-h3 {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 2rem 0 0.5rem;
+}
+
+.post-p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+  font-size: 14px;
+}
+
+.post-list {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0 0 1.25rem 1.5rem;
+  font-size: 14px;
+}
+
+.post-list li { margin-bottom: 0.35rem; }
+
+.post-link {
+  color: var(--accent-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--border-hover);
+}
+
+.post-link:hover { color: var(--accent); }
+
+.post-hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.post-quote {
+  border-left: 2px solid var(--accent);
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.25rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.code-block pre { margin: 0; padding: 1.25rem; overflow-x: auto; }
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-block code.hljs {
+  background: var(--bg-surface);
+  padding: 0;
+}
+
+.code-lang {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.inline-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-dim);
+  background: var(--bg-surface);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+/* ── Syntax highlighting (highlight.js github-dark) ── */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}
+</style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="a43298d8-e577-4567-bf64-8cf6bf0a620b"></script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand"><span class="prompt">~/</span>jsmithedin</a>
+      <div class="nav-links">
+        <a href="/blog/" class="nav-link"><i class="ti ti-pencil" aria-hidden="true"></i> blog</a>
+        <a href="https://github.com/jsmithedin" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-github" aria-hidden="true"></i> github</a>
+        <a href="https://www.linkedin.com/in/jamie-smith-engineer" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-linkedin" aria-hidden="true"></i> linkedin</a>
+      </div>
+    </div>
+  </nav>
+  <main class="site-main">
+  <div class="post-header">
+    <a href="/blog/" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> all posts</a>
+    <p class="header-label"><span class="prompt">$</span> cat ./posts/choosing-your-scholars.md</p>
+    <h1 class="post-title">Building the House of Knowledge: Choosing Your Scholars</h1>
+    <div class="post-meta-bar">
+      <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 06 Jul 2026</span>
+      <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 11 min read</span>
+      <div class="badges">
+        
+        <span class="badge badge-topic">ai</span>
+        
+        <span class="badge badge-topic">RAG</span>
+        
+        <span class="badge badge-topic">House of Knowledge</span>
+        
+        <span class="badge badge-topic">evaluation</span>
+        
+      </div>
+    </div>
+    <p class="post-description">Part 6 of a series on building a real RAG system with real data. Nova Lite against Haiku 4.5, on a test set built to stop me picking the cheap one on reflex.</p>
+  </div>
+  <article class="post-content">
+    <h1 class="post-h1">Building the House of Knowledge: Choosing Your Scholars</h1>
+<p class="post-p"><em>Part 6 of the House of Knowledge series. <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-RAG-on-a-budget/" class="post-link">Part 1 is here.</a> <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-examining-the-scribe/" class="post-link">Part 5, where I built the test set, is here.</a></em></p>
+<hr class="post-hr">
+<p class="post-p">The last post was the one I didn’t plan to write. I’d meant to compare two models, pick a winner, and move on; instead I spent a post building a test set whose whole job was to stop me handing the result to the model I was quietly backing. Nova Lite is around 24 times cheaper than Haiku, I pay the Bedrock bill, and I’d made no secret of wanting the cheap one to win. So I wrote the questions down in advance, wrote the expected answers before any model ran, and set up blind scoring so I couldn’t see which model I was marking.</p>
+<p class="post-p">Then I ran it. This is what came back.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Why the choice matters at all</h2>
+<p class="post-p">Latency, first. The point of this system is answering questions at the table, mid-session, while the DM is still describing the room. An answer that arrives thirty seconds later is an answer nobody waited for. Speed isn’t a nice-to-have here; it’s most of the value.</p>
+<p class="post-p">Then cost. It’s pennies per query either way, but it’s my pennies, and the system runs indefinitely. A model that costs 24 times more needs to be worth 24 times more, or at least worth enough to notice.</p>
+<p class="post-p">Both of those pull towards the cheaper model before a single answer is scored. Which is exactly why I didn’t trust myself to score them.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The contestants</h2>
+<p class="post-p">Two of the cheapest capable models on Bedrock, same RAG pipeline behind both.</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Nova Lite</th>
+<th>Haiku 4.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Family</td>
+<td>Amazon</td>
+<td>Anthropic</td>
+</tr>
+<tr>
+<td>Input ($/1M tokens)</td>
+<td>0.06</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>Output ($/1M tokens)</td>
+<td>0.24</td>
+<td>5.00</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Nova Lite is Amazon’s small, fast, cheap model. Haiku 4.5 is Anthropic’s small model, more expensive, generally reckoned to be sharper. The only thing that changes between the two runs is the <code class="inline-code">modelId</code>; retrieval, prompt, and the note corpus are identical. That’s the Converse API from <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-bedrock-api/" class="post-link">Part 2</a> earning its keep. One string changes and the whole pipeline points at a different model.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The test set, in one paragraph</h2>
+<p class="post-p">Twenty-four questions across three tiers, eight in each. Lookup is a single fact in a single note. Synthesis needs several notes assembled. Temporal asks how something changed over time, which is where a wiki search falls down and a RAG system should earn its place. Expected answers were written before any model ran, and the corpus was frozen at 247 notes so the target couldn’t move. The full reasoning is in <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-examining-the-scribe/" class="post-link">Part 5</a>; I won’t repeat it here.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Scoring it without lying to myself</h2>
+<p class="post-p">Each answer got scored blind. A script stripped the model names, shuffled the order, and labelled everything A or B. I scored each one against a rubric, correctness out of two, completeness out of two, and a hallucination flag, with no idea which model produced it. The unmasking was a separate step I didn’t run until every answer was scored.</p>
+<p class="post-p">Retrieval was scored separately and needs no judge: for each question I’d listed the notes the answer actually lives in, so I just check whether chunks from those notes came back in the top five. That’s a yes or no per note.</p>
+<p class="post-p">Alongside the human scoring I ran an automated faithfulness judge through RAGAS, using Mistral Large as the model. Mistral is in neither contestant’s family, so it can’t quietly prefer its own work. The judge’s job was narrow: for each answer, is every claim supported by the retrieved notes. I wasn’t planning to trust it. I was planning to measure how often it agreed with me, because that number decides whether the rest of this series can lean on automated scoring or whether I’m hand-marking answers forever.</p>
+<p class="post-p">More on that later. It didn’t go the way I hoped.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The whole result in one picture</h2>
+<p class="post-p"><img src="/images/posts/scholars.png" alt="Nova Lite versus Haiku 4.5 across the House of Knowledge eval. Three panels: correctness scored 0 to 2 by tier, identical for both models at lookup 2.00, synthesis 1.88 and temporal 1.62; cost per query, Nova Lite $0.00011 against Haiku 4.5 $0.00259; and latency, Nova Lite 642ms p50 against Haiku 4.5 2902ms p50."></p>
+<p class="post-p">That’s the finding, before I’ve explained any of it. Correctness tied, cost and speed nowhere near. The rest of this post is me walking through the three panels and owning the one place the tidy story falls apart.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Correctness: a dead heat</h2>
+<table>
+<thead>
+<tr>
+<th>tier</th>
+<th>Nova Lite correctness</th>
+<th>Haiku 4.5 correctness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lookup</td>
+<td>2.00</td>
+<td>2.00</td>
+</tr>
+<tr>
+<td>synthesis</td>
+<td>1.88</td>
+<td>1.88</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td>1.62</td>
+<td>1.62</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Identical. Not close, identical, at every tier. On being right, the model that costs 24 times more bought me nothing. Lookup is solved for both. Synthesis and temporal are harder for both, in the same measure.</p>
+<p class="post-p">I’ll be honest about the size of this test. Twenty-four questions is not a benchmark, and I’m not claiming Nova Lite equals Haiku in general. But for this workload, on this corpus, the cheap model was not worse at getting the answer right. That was the whole thing I was afraid of finding the other way round, and the blind scoring is the only reason I trust it.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Where the money actually goes</h2>
+<p class="post-p">Correctness ties, so the difference has to live somewhere else. It lives in two places.</p>
+<p class="post-p">The first is completeness. Haiku gives fuller answers, and the gap widens on the harder tiers.</p>
+<table>
+<thead>
+<tr>
+<th>tier</th>
+<th>Nova Lite completeness</th>
+<th>Haiku 4.5 completeness</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lookup</td>
+<td>2.00</td>
+<td>2.00</td>
+</tr>
+<tr>
+<td>synthesis</td>
+<td>1.62</td>
+<td>1.88</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td>1.50</td>
+<td>1.62</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Both models get the core fact; Haiku is more likely to include the surrounding detail that makes the answer useful without a follow-up question. Whether that’s worth paying for depends on how much you mind asking twice.</p>
+<p class="post-p">The second is hallucination. Across all 48 answers, Haiku produced zero. Nova Lite produced one. A single flagged answer out of twenty-four isn’t a pattern, but it isn’t nothing either, and it points the same direction as completeness. You’re paying Haiku for fuller, safer answers. You’re not paying it to be more correct.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Cost and latency: not close</h2>
+<p class="post-p">This is where the reflex I didn’t trust turns out to be right.</p>
+<table>
+<thead>
+<tr>
+<th>model</th>
+<th>cost per query</th>
+<th>total (24 queries)</th>
+<th>latency p50</th>
+<th>latency p95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nova Lite</td>
+<td>$0.00011</td>
+<td>$0.0026</td>
+<td>642ms</td>
+<td>972ms</td>
+</tr>
+<tr>
+<td>Haiku 4.5</td>
+<td>$0.00259</td>
+<td>$0.0621</td>
+<td>2902ms</td>
+<td>4403ms</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Nova Lite is roughly 24 times cheaper and about four and a half times faster. The whole run, both models, every question, came to about fivepence. The compute was never going to be the expensive part.</p>
+<p class="post-p">But look at the latency. Nova answers in well under a second at the median; Haiku takes about three. At the table that’s the difference between looking like you had the answer all along and sitting there going “it’s coming, give it a sec” while everyone waits on you. Quick and right reads as smart. Correct but three seconds late makes you look daft. The two axes you actually feel in use, speed and cost, both point hard at Nova. The price of choosing it is completeness, not correctness.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Where they actually diverge</h2>
+<p class="post-p">I’d planned to end this section with the two or three queries where the models disagreed most, quoted side by side. The plan didn’t survive the data. The largest correctness gap between the models, on any single query, was zero. They agreed on the answer nearly everywhere. That absence is the finding, so I’ll show the divergence that does exist instead, and it’s more interesting anyway.</p>
+<p class="post-p">It shows up when retrieval comes up short.</p>
+<p class="post-p">Two queries, same underlying problem. The note holding the answer never made the top five. On q23, about a portable ward device tested in a session that didn’t get retrieved, both models did the right thing:</p>
+<blockquote class="post-quote">
+<p class="post-p"><strong>Haiku:</strong> I don’t have session notes containing information about a portable ward device or its behavior during testing. The retrieved notes don’t include details about this specific item or experiment.</p>
+</blockquote>
+<blockquote class="post-quote">
+<p class="post-p"><strong>Nova Lite:</strong> The session notes do not provide information on the portable ward device or its behavior during testing, nor do they mention any changes when Ultrin approached it. Therefore, I cannot provide an answer based on the provided notes.</p>
+</blockquote>
+<p class="post-p">Both refuse. Correct behaviour when the answer isn’t in front of you.</p>
+<p class="post-p">Then q21, “when did Ultrin wound Nihal, and what did it cost him?” The note with the cost to Ultrin, his profile note, wasn’t retrieved either. Same failure. This time Nova did not refuse:</p>
+<blockquote class="post-quote">
+<p class="post-p"><strong>Nova Lite:</strong> Ultrin wounded Nihal during Jorund’s soul trial, as mentioned in the session notes. The exact date is not provided, but it occurred before Session 38 on 2026-05-26. The cost to Ultrin remains unclear, but it is noted that the consequences have been severe, with the fundamental nature of magic itself being altered and the Weave becoming vulnerable and unstable.</p>
+</blockquote>
+<p class="post-p">That’s the hallucination. Two problems in one paragraph. It asserts the wounding happened “during Jorund’s soul trial”, which the retrieved notes don’t support. And asked what it cost Ultrin, it couldn’t find the answer, so it answered a different question: the consequences it describes are what happened to magic and the Weave, which is about Nihal, dressed up as the cost to Ultrin. Confident, plausible, and wrong.</p>
+<p class="post-p">So the one hallucination isn’t really “Nova is worse at facts”. It’s “when retrieval fails, Haiku hedges and Nova improvises”. Same missing note, opposite instinct. That’s the completeness-and-safety trade made concrete, and underneath it’s a retrieval failure, not a model one. Hold that thought; it’s the whole of the next post.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Did the judge agree with me? Mostly no.</h2>
+<p class="post-p">This was meant to be the quietly useful result. If the automated faithfulness judge agreed with my scoring often enough, later posts in this series could lean on it and I’d stop hand-marking answers. So I ran it in parallel and measured the agreement.</p>
+<p class="post-p">Agreement rate: 31%. Fifteen of forty-eight.</p>
+<p class="post-p">That’s bad, and it’s worth being precise about why, because the number on its own is misleading. Every single disagreement runs the same way: I saw no hallucination, and the judge scored the answer as unfaithful. The judge isn’t randomly wrong; it’s systematically stricter than me, in one direction.</p>
+<p class="post-p">Two things cause it. The first is the threshold. I set the bar at 1.0, meaning an answer counts as faithful only if every claim in it ties back to a retrieved chunk. RAGAS breaks each answer into its component claims and checks them one by one, and it marks reasonable rephrasing or mild synthesis as unsupported. Almost nothing scores a clean 1.0. Set the strictest possible bar and of course most answers fall short of it.</p>
+<p class="post-p">The second is deeper. Faithfulness and hallucination aren’t the same question. Faithfulness asks whether every claim is inferable from the retrieved context. My hallucination flag asks whether the answer asserts something that’s nowhere in the notes at all. The clearest case is q23, the ward-device refusal above. Haiku honestly said it didn’t have the information. The judge scored that answer 0.00 faithful. A correct, honest “I don’t know” was rated maximally unfaithful, because a refusal contains no claims the retrieved context supports. The metric punishes the exact behaviour I most want to see.</p>
+<p class="post-p">So the honest answer to the question Part 5 set up: no, I can’t lean on the automated judge as it stands. Not at this threshold, and not while it treats abstention as failure. For the rest of the series the human stays the primary judge, or the judge needs recalibrating before it’s trusted with anything. I’d hoped to automate myself out of the scoring. I’ve instead got a clear measurement of why I can’t yet. That’s still a result. It’s just not the one I wanted.</p>
+<hr class="post-hr">
+<h2 class="post-h2">So which one?</h2>
+<p class="post-p">For this system, at the table, Nova Lite. It matches Haiku on correctness, answers in a third of the time, and costs a twenty-fourth as much. When the answer is in the notes, it gets it, quickly and cheaply.</p>
+<p class="post-p">Reach for Haiku when completeness matters more than speed, and when you’d rather the model said nothing than guessed. That’s a real distinction, not a tie-breaker. If the cost of a wrong-but-confident answer is high, Haiku’s instinct to hedge is worth the extra latency and the extra pennies. For a D&amp;D wiki, it usually isn’t. For something with consequences, it might be.</p>
+<p class="post-p">To be clear, none of this is a recommendation that everyone should reach for Nova Lite. It’s what this workload, on this corpus, scored. Your questions might separate the two models in ways mine didn’t.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What’s next</h2>
+<p class="post-p">The most interesting number in this whole exercise isn’t in the model comparison. It’s in the retrieval table from <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-examining-the-scribe/" class="post-link">Part 5</a>, sitting under both models equally: temporal queries, hit rate 0.75. One in four temporal questions retrieved nothing relevant at all. Both models scored the same on those because they were both handed the same empty context, and the honest ones refused while Nova, once, filled the gap with something plausible.</p>
+<p class="post-p">That’s not a model problem. That’s the ceiling of one-shot retrieval, and it’s where Part 7 goes: where retrieval fails, why “how did X change over time” is the question that breaks it, and what the two queries that came back with nothing can tell us. After that, Part 8 asks whether letting the model run its own searches fixes the thing this post couldn’t.</p>
+<p class="post-p">I was ready to declare a winner and move on. The test set had other ideas, and now I apparently need a judge for the judge.</p>
+<hr class="post-hr">
+
+  </article>
+</main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <span class="prompt">$</span> built 2026-07-02 19:55 UTC &mdash;
+      <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
+    </p>
+  </footer>
+  <script>(function () {
+  const label = document.querySelector(".header-label");
+  if (!label) return;
+
+  const text = label.textContent;
+  label.textContent = "";
+  label.style.visibility = "visible";
+
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.textContent = "▋";
+  cursor.style.cssText = "color: #c8f542; animation: blink 1s step-end infinite;";
+  label.appendChild(cursor);
+
+  const style = document.createElement("style");
+  style.textContent = "@keyframes blink { 50% { opacity: 0; } }";
+  document.head.appendChild(style);
+
+  function type() {
+    if (i < text.length) {
+      cursor.insertAdjacentText("beforebegin", text[i]);
+      i++;
+      setTimeout(type, 35 + Math.random() * 25);
+    } else {
+      setTimeout(() => { cursor.style.display = "none"; }, 1200);
+    }
+  }
+
+  setTimeout(type, 400);
+})();
+</script>
+</body>
+</html>
