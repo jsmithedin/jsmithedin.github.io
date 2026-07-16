@@ -1,0 +1,950 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building the House of Knowledge: Lost in the Stacks</title>
+  <meta name="description" content="Part 7 of a series on building a real RAG system with real data. Retrieval scored fine on lookup and fell apart on temporal questions. This is why.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <meta property="og:title" content="Building the House of Knowledge: Lost in the Stacks">
+  <meta property="og:description" content="Part 7 of a series on building a real RAG system with real data. Retrieval scored fine on lookup and fell apart on temporal questions. This is why.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jamielab.uk/blog/lost-in-the-stacks/">
+  
+  <meta property="og:image" content="https://jamielab.uk/images/posts/stacks.png">
+  
+  
+  <meta property="article:published_time" content="2026-07-16T00:00:00.000Z">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Building the House of Knowledge: Lost in the Stacks">
+  <meta name="twitter:description" content="Part 7 of a series on building a real RAG system with real data. Retrieval scored fine on lookup and fell apart on temporal questions. This is why.">
+  
+  <meta name="twitter:image" content="https://jamielab.uk/images/posts/stacks.png">
+  
+  <style>:root {
+  --bg: #0d0d0d;
+  --bg-surface: #141414;
+  --bg-card: #181818;
+  --bg-card-hover: #1e1e1e;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text-primary: #e8e6e0;
+  --text-secondary: #888880;
+  --text-muted: #555550;
+  --accent: #c8f542;
+  --accent-dim: #9bbf2e;
+  --prompt: #c8f542;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Syne", sans-serif;
+  --lang-python: #4c8eff;
+  --lang-ts: #3178c6;
+  --lang-js: #f7df1e;
+  --lang-js-text: #1a1a00;
+  --lang-rust: #ce6a30;
+  --lang-go: #00add8;
+  --lang-shell: #89d67c;
+  --lang-hcl: #7b42bc;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: 14px;
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.nav-inner {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-brand:hover { color: var(--accent); transition: color 0.15s; }
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: var(--accent); }
+.nav-link .ti { font-size: 15px; }
+
+/* ── Header ── */
+.site-main {
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.site-header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 36ch;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-divider {
+  color: var(--border);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* ── Grid ── */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+/* ── Card ── */
+.repo-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.repo-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.repo-card:hover { background: var(--bg-card-hover); }
+.repo-card:hover::before { height: 100%; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+  transition: color 0.15s;
+  flex: 1;
+}
+
+.card-title:hover { color: var(--accent); }
+
+.card-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.card-link:hover { color: var(--accent); }
+.card-link .ti { font-size: 13px; }
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge-topic {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  color: var(--text-muted);
+}
+
+.lang-python  { background: rgba(76, 142, 255, 0.15); color: var(--lang-python); }
+.lang-ts      { background: rgba(49, 120, 198, 0.15); color: var(--lang-ts); }
+.lang-js      { background: rgba(247, 223, 30, 0.15);  color: #c9b500; }
+.lang-rust    { background: rgba(206, 106, 48, 0.15);  color: var(--lang-rust); }
+.lang-go      { background: rgba(0, 173, 216, 0.15);   color: var(--lang-go); }
+.lang-shell   { background: rgba(137, 214, 124, 0.15); color: var(--lang-shell); }
+.lang-hcl     { background: rgba(123, 66, 188, 0.15);  color: var(--lang-hcl); }
+.lang-other   { background: transparent; border: 1px solid var(--border-hover); color: var(--text-muted); }
+
+.card-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.meta-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.meta-item .ti { font-size: 12px; }
+
+/* ── Prompt accent ── */
+.prompt { color: var(--prompt); }
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  max-width: 1100px;
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.footer-link:hover { color: var(--accent); }
+
+/* ── Scanline overlay ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 9999;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .nav-inner { padding: 0 1rem; }
+  .site-main { padding: 0 1rem 3rem; }
+  .site-header { padding: 2.5rem 0 2rem; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .header-stats { flex-direction: row; }
+  .stat { align-items: flex-start; }
+  .repo-grid { grid-template-columns: 1fr; }
+  .site-footer { padding: 1.5rem 1rem; }
+}
+
+/* ── Section headings (homepage) ── */
+.repos-section { margin-bottom: 3rem; }
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.section-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.section-link:hover { color: var(--accent); }
+
+/* ── Blog listing ── */
+.blog-preview {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  position: relative;
+  cursor: pointer;
+}
+
+.blog-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.blog-row:hover { background: var(--bg-card-hover); }
+.blog-row:hover::before { height: 100%; }
+.blog-row:last-child { border-bottom: none; }
+
+.blog-row-main { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.blog-row-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.blog-row-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  transition: color 0.15s;
+}
+
+.blog-row:hover .blog-row-title { color: var(--accent); }
+
+.blog-row-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.blog-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.blog-row-stats { display: flex; gap: 1rem; }
+
+/* ── Post page ── */
+.post-header {
+  padding: 3.5rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+  max-width: 68ch;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.back-link:hover { color: var(--accent); }
+
+.post-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0.75rem 0 1rem;
+}
+
+.post-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.post-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  border-left: 2px solid var(--border-hover);
+  padding-left: 1rem;
+  margin-top: 1rem;
+}
+
+/* ── Post content ── */
+.post-content { max-width: 68ch; }
+
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.post-h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 2.5rem 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.post-h3 {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 2rem 0 0.5rem;
+}
+
+.post-p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+  font-size: 14px;
+}
+
+.post-list {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0 0 1.25rem 1.5rem;
+  font-size: 14px;
+}
+
+.post-list li { margin-bottom: 0.35rem; }
+
+.post-link {
+  color: var(--accent-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--border-hover);
+}
+
+.post-link:hover { color: var(--accent); }
+
+.post-hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.post-quote {
+  border-left: 2px solid var(--accent);
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.25rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.code-block pre { margin: 0; padding: 1.25rem; overflow-x: auto; }
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-block code.hljs {
+  background: var(--bg-surface);
+  padding: 0;
+}
+
+.code-lang {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.inline-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-dim);
+  background: var(--bg-surface);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+/* ── Syntax highlighting (highlight.js github-dark) ── */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}
+</style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="a43298d8-e577-4567-bf64-8cf6bf0a620b"></script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand"><span class="prompt">~/</span>jsmithedin</a>
+      <div class="nav-links">
+        <a href="/blog/" class="nav-link"><i class="ti ti-pencil" aria-hidden="true"></i> blog</a>
+        <a href="https://github.com/jsmithedin" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-github" aria-hidden="true"></i> github</a>
+        <a href="https://www.linkedin.com/in/jamie-smith-engineer" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-linkedin" aria-hidden="true"></i> linkedin</a>
+      </div>
+    </div>
+  </nav>
+  <main class="site-main">
+  <div class="post-header">
+    <a href="/blog/" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> all posts</a>
+    <p class="header-label"><span class="prompt">$</span> cat ./posts/lost-in-the-stacks.md</p>
+    <h1 class="post-title">Building the House of Knowledge: Lost in the Stacks</h1>
+    <div class="post-meta-bar">
+      <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 16 Jul 2026</span>
+      <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 14 min read</span>
+      <div class="badges">
+        
+        <span class="badge badge-topic">ai</span>
+        
+        <span class="badge badge-topic">RAG</span>
+        
+        <span class="badge badge-topic">House of Knowledge</span>
+        
+        <span class="badge badge-topic">evaluation</span>
+        
+      </div>
+    </div>
+    <p class="post-description">Part 7 of a series on building a real RAG system with real data. Retrieval scored fine on lookup and fell apart on temporal questions. This is why.</p>
+  </div>
+  <article class="post-content">
+    <h1 class="post-h1">Building the House of Knowledge: Lost in the Stacks</h1>
+<p class="post-p"><em>Part 7 of the House of Knowledge series. <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-RAG-on-a-budget/" class="post-link">Part 1 is here.</a> <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-choosing-your-scholars/" class="post-link">Part 6, the model comparison, is here.</a></em></p>
+<hr class="post-hr">
+<p class="post-p">The last post ended on the one hallucination in forty-eight answers, and the honest read was that it wasn’t really about the model. Nova Lite guessed; Haiku hedged. Same missing note, opposite instinct. Underneath both was a retrieval failure: the note that held the answer never made it into the top five.</p>
+<p class="post-p">That’s the thread this post pulls all the way out. Every question in this series so far has assumed retrieval works and generation is the interesting part. Post 5 and 6’s test set already says otherwise: lookup questions are solved, and the harder tiers aren’t. This is what that looks like, and why.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What the test data showed</h2>
+<table>
+<thead>
+<tr>
+<th>tier</th>
+<th>avg recall</th>
+<th>hit rate</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lookup</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>synthesis</td>
+<td>0.60</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td>0.62</td>
+<td>0.75</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Lookup is a solved problem: single fact, single note, embeds cleanly, comes back every time. Synthesis is the tier that looks fine until you check the recall column: hit rate 1.00 means every synthesis query got <em>something</em> relevant back, but average recall of 0.60 means it’s usually missing two out of every five notes an answer needs. It doesn’t fail loudly. It fails by handing the model an incomplete case file without saying so, and letting it sound confident about a partial answer.</p>
+<p class="post-p">Temporal is the tier that fails loudly. Hit rate 0.75 means one in four temporal questions came back with nothing relevant at all, not a partial match, nothing. Two of those eight are worth walking through in detail, because they’re not the same failure.</p>
+<hr class="post-hr">
+<h2 class="post-h2">A failure taxonomy</h2>
+<p class="post-p">Three mechanisms, not one, and the first is doing most of the damage.</p>
+<p class="post-p"><strong>Budget-hogging.</strong> A query needs several notes; one of them embeds closest and eats two or three of the five slots, at the direct expense of the others. This is the synthesis tier’s real problem, and it showed up in every partial-recall case I checked. Ask who’s competing to lead Neverwinter Academy, a question that names four people, and retrieval hands back the Academy’s own note twice (<code class="inline-code">Key Events</code> and <code class="inline-code">Overview</code>, overlapping content) plus one of the four people, and never gets to the other two. Ask about the plan for Neverdeath Graveyard and one of the two expected session notes takes three of five slots (<code class="inline-code">Recap</code>, a scene chunk, <code class="inline-code">NPCs</code>) while the other expected session never appears. Ask when Ultrin wounded Nihal and Nihal’s own note takes three slots, leaving no room for Ultrin’s. It isn’t that retrieval misses the topic. It retrieves <em>too much</em> of one right answer and crowds out the rest.</p>
+<p class="post-p"><strong>Topically-adjacent, wrong specific note.</strong> The system correctly works out what a question is about and retrieves several genuinely relevant chunks, entity profiles, related people, even the right kind of scene, but not the one specific note with the answer. The Nand’s-funeral question below is the clean example.</p>
+<p class="post-p"><strong>Coincidental lexical overlap.</strong> The retrieved chunks aren’t wrong for a sensible reason. They just happen to share surface phrasing with the query, entity name plus action verb, while being about something else entirely. The ward-device question below is this one, and it’s the least comfortable finding in this post.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Chunking revisited</h2>
+<p class="post-p">Post 4 covered structure-aware chunking, splitting each note on its <code class="inline-code">##</code>/<code class="inline-code">###</code> headings instead of a fixed character count. It’s the right call for a wiki of short reference notes. It has a specific failure mode for session logs, and it’s easiest to just show it.</p>
+<p class="post-p">Take the session where the ward device test happens, <code class="inline-code">2026-06-09.md</code>. It chunks into six pieces: <code class="inline-code">Recap</code>, <code class="inline-code">Open Threads</code>, <code class="inline-code">NPCs This Session</code>, <code class="inline-code">Items &amp; Loot</code>, and then two long scene chunks headed <code class="inline-code">## [[Neverwinter Academy]]</code> and <code class="inline-code">## [[House of Knowledge]]</code>. The ward-device test itself, the whole answer to “how did the device behave when Ultrin approached it”, sits inside the <code class="inline-code">Neverwinter Academy</code> chunk: forty-odd lines of nested play-by-play, headed with a location name that appears in a couple of dozen other chunks across the vault. There’s even a much shorter, denser summary of nearly the same answer sitting in the <code class="inline-code">Open Threads</code> chunk for that session: “Portable ward device: bonded to Ultrin, Dean Maverin Soul calibrating for 45 minutes.” Neither surfaced. Nothing from this note did. I checked what came back instead, and it’s stranger than a heading problem. More on that below.</p>
+<p class="post-p">Where this mechanism does show up clearly is the funeral question and the budget-hogging cases above. Compare <code class="inline-code">People/Ultrin.md</code>: it chunks into <code class="inline-code">Overview</code>, <code class="inline-code">Role in the Campaign</code>, <code class="inline-code">Key Events</code>, <code class="inline-code">Relationships</code>. Generic headings, every one of them, but the body of each is entirely about one entity. That’s a clean embedding target for anything that names Ultrin, and it’s exactly why <code class="inline-code">Nihal.md</code> and <code class="inline-code">Neverwinter Academy.md</code>, both profile-style notes, keep winning the budget-hogging cases above: concentrated, entity-scoped chunks embed more confidently than a scene buried in a session log.</p>
+<p class="post-p">The mechanism, as far as it goes: a session note’s chunk is titled by scene or location, which tells the embedding model nothing, because that heading recurs everywhere. An entity note’s chunk is titled generically but the body is concentrated. A query that names an entity tends to pull toward that entity’s profile note over the session note describing something that happened to them on a specific day. That’s real, and it’s most of what’s going on in the funeral question below. It is not, it turns out, what happened with the ward device question. That one didn’t lose to a profile note at all.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The multi-hop problem, or: the eval had its own blind spot</h2>
+<p class="post-p">I’d planned this section around q23 and q24 as matched examples of the same failure, both zero-recall temporal questions. Once I had the retrieved chunks in front of me, they turned out not to match at all, and one of them exposed a gap in the eval itself, not just the retrieval system.</p>
+<p class="post-p"><strong>q24</strong>: “How has the plan for Nand’s funeral shifted, and why does the timing matter?” Expected note: <code class="inline-code">2026-03-03.md</code>, recall 0.0. What actually came back: <code class="inline-code">Sister Maelin Thorn.md</code>, <code class="inline-code">Neverwinter Academy.md</code>, <code class="inline-code">Nand.md</code> twice, and the <code class="inline-code">Open Threads</code> chunk from a different session, <code class="inline-code">2025-12-16.md</code>. Every single one of those is genuinely about the funeral thread. The system found the topic. It just found the wrong session’s version of it.</p>
+<p class="post-p">And look at the question again. “Has shifted” is asking about change over time, and Nand’s funeral is a thread that runs through this campaign for two years of game time, mentioned across sessions from early 2024 through mid-2026. The golden set names exactly one of those sessions as the expected source. That’s not a fair test of a temporal question. A single note can’t tell you how something shifted; you need at least two points to compare, <s>and that’s why q24 scored zero</s>. Turns out it wasn’t why, not quite; skip ahead to the k-bump section, the note was retrievable all along, just crowded out. The golden-set critique still stands as a design flaw worth naming, it just isn’t the explanation for this particular failure.</p>
+<p class="post-p">I wrote the golden set in Post 5 specifically to stop myself grading my own homework generously, and it still let a single-note answer stand in for a question that structurally needs more than one. Worth naming plainly rather than fixing it and moving on: the eval methodology has its own version of the retrieval problem, expecting one answer to a question that’s actually asking about change. I’ve left it as-is rather than patching the golden set after the fact; re-baselining one query after seeing the result would be grading my own homework in the other direction.</p>
+<p class="post-p"><strong>q23</strong>: “How did the portable ward device behave during testing, and what changed when Ultrin approached it?” Same shape of question, same zero recall, completely different failure. What came back: five chunks from old 2024 session notes, “Headed to Raven’s nest,” a manor scene, another manor scene, a residential scene, and a Farm Realm chunk. None of them are about the ward device. None of them are even from the right year.</p>
+<p class="post-p">I went and read the text behind all five hits, expecting one lucky coincidence and four weaker echoes. Instead all five follow the same pattern, and one of them is closer than I expected. The top hit is a scene about renting a storage unit at a warehouse, and it has Ultrin doing things in it: “Ultrin casts suggestion,” “plus Ultrin head inside.” Another, from a different 2024 session at Veilgard Manor, has Ultrin talking about dreams and defences, and includes the line “Ultrin knows of protective wards that could protect against the dream.” Protective wards. Not the portable ward device, but close enough in wording that I’d believe an embedding model blurs the two. A third hit, a profile chunk for a place called the Farm Realm, describes creatures that “turned to look directly at him” when Ultrin did something, which is structurally almost the same shape as “what changed when Ultrin approached it.” None of these five chunks are about the ward device. All five share vocabulary or sentence shape with the query in a way that has nothing to do with the answer. The embedding isn’t wrong to think these are similar to the query. It’s matching on “Ultrin, doing something, something reacting”, and that pattern shows up constantly across two years of session notes, almost none of it about this one device.</p>
+<p class="post-p">That’s a different kind of failure to q24. q24 found the right topic and the wrong timepoint, and turns out to be fixable by asking for more chunks. q23 didn’t find the topic at all; it found a coincidence, and no amount of asking for more chunks fixes that (confirmed below). With 247 notes and a small recurring cast, “mentions the same proper noun in an active sentence” turns out to be enough surface similarity to beat genuine relevance outright.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Does a bigger k fix it?</h2>
+<p class="post-p">Ran it. Same as Post 6: the plan didn’t survive the data.</p>
+<table>
+<thead>
+<tr>
+<th>tier</th>
+<th>k=5 recall</th>
+<th>k=10 recall</th>
+<th>k=15 recall</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lookup</td>
+<td>1.00</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>synthesis</td>
+<td>0.60</td>
+<td>0.85</td>
+<td>0.85</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td>0.62</td>
+<td>0.81</td>
+<td>0.88</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">The headline number looks like a clean win: synthesis jumps 25 points just by asking for twice as many chunks, temporal keeps climbing all the way to k=15. Doubling k for free (this is pure retrieval, no extra Bedrock spend) buys a real improvement. But the per-query breakdown is where it gets interesting, and where my own predictions in this section, written before I ran it, mostly missed.</p>
+<p class="post-p"><strong>Budget-hogging queries mostly fixed at k=10, exactly as predicted.</strong> q09 (0.50 → 1.00), q10 (0.50 → 1.00), q11 (0.67 → 1.00), q14 (0.67 → 1.00) all resolve cleanly the moment there’s enough room for the dominant note and the starved one to coexist. That part of the theory held.</p>
+<p class="post-p"><strong>q24 got fixed. I said it wouldn’t.</strong> I’d predicted a wider net would just pull in more of the wrong session’s chunks, since the failure looked like “correct topic, wrong timepoint” rather than “correct note, ranked too low”. Recall went from 0.0 to 1.0 at k=10. Turns out <code class="inline-code">2026-03-03.md</code> was in the similarity neighbourhood all along, just outside the top five, competing with the same entity-profile chunks that beat it there. That’s budget-hogging too. I’d assumed a wrong timepoint meant the note was genuinely absent. It wasn’t, just crowded out. Worth sitting with: my “topically-adjacent, wrong note” category and my “budget-hogging” category turned out to be the same mechanism wearing two descriptions, and only the k experiment told them apart.</p>
+<p class="post-p"><strong>q23 didn’t move. I said it wouldn’t, and this time I was right.</strong> Recall stayed at 0.0 through k=15. The coincidental-overlap chunks aren’t ranked sixth or tenth waiting to be let in with a wider net, they’re winning outright, and the right answer isn’t competitive at any depth I tested. This is the one mechanism a bigger k can’t touch, because the problem isn’t depth, it’s that the ranking itself is wrong for this query.</p>
+<p class="post-p"><strong>q12 and q13 also didn’t move, and I don’t have a clean explanation for these two.</strong> Both flat across all three k values (0.67 and 0.50). Neither fits the coincidental-overlap story the way q23 does, nothing in their retrieved chunks looks like an unrelated coincidence, but neither fits the budget-hogging story either, since more room didn’t help. Leaving this as an honest gap rather than forcing an explanation: something about these two queries’ missing notes puts them further outside the similarity neighbourhood than q24’s was, and I haven’t dug into why. If Post 8’s agent also fails on these two, that’s a useful data point in itself.</p>
+<p class="post-p"><strong>q21 needed k=15, not k=10</strong> (0.50 → 0.50 → 1.00). A milder version of the same story as q24: the starved note was there, just further down than the others.</p>
+<p class="post-p"><strong>q15 only half-fixed, and stays there</strong> (0.33 → 0.67 → 0.67). This one needs three notes, and even at k=15 only two of them ever show up. One extra slot of room recovered one missing note; it didn’t buy the third. Budget-hogging is real here, it’s just not fully solvable by depth alone when a query needs enough different notes.</p>
+<p class="post-p">So: a bigger k is a real, free, honest fix for most of the budget-hogging failures, including one I’d wrongly filed under a different category, though not always a complete one. It buys nothing at all against genuine coincidental overlap. And two queries sit in a category I can’t yet name.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Other mitigations, priced honestly</h2>
+<p class="post-p">Hybrid search (BM25 keyword matching alongside the vector search) and re-ranking a wider candidate set with a second, cheaper model are both real options, and neither exists in this codebase yet. Building and testing them properly is its own piece of work, not an afternoon’s addition to this post. Naming them without pretending I’ve tried them: hybrid search is the one I’d bet on for q23 specifically. “Ward device” and “portable ward” are exact, unusual terms that appear almost nowhere else in the corpus; a keyword search would nail the right chunk regardless of what the vector similarity thinks about Ultrin-plus-verb phrasing. Re-ranking is really just a smarter version of what the k-bump experiment already showed works: if the starved note is somewhere in a wider candidate pool, promoting it does the same job the bigger k did for q09/q10/q11/q14/q21/q24, probably more cheaply than retrieving fifteen full chunks on every query. Neither one obviously touches q23, since re-ranking still starts from the same candidate pool a wider k pulls from, and that pool doesn’t contain the right answer at any depth I tested.</p>
+<p class="post-p">Metadata filtering, letting a query scope itself to an arc, session, or tag, already exists in the app. It needs the user or the model to already know which session or arc to scope to, though. That’s not a retrieval fix, it’s a UI feature for someone who already half-remembers the answer.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What a bigger k can’t buy</h2>
+<p class="post-p">Most of what looked like a deep, structural retrieval problem turned out to be a capacity problem with a free fix: ask for more chunks. That’s most of the synthesis tier and half the temporal failures, including one, q24, I’d wrongly diagnosed as something more interesting than it was.</p>
+<p class="post-p">Two failures stayed broken no matter how wide the net went. q23, where the right answer isn’t in the similarity neighbourhood at any depth I tested, because the query and the right chunk just don’t share enough vocabulary, while several wrong chunks share plenty. And q12/q13, which fail the same way at every k for reasons I haven’t pinned down yet. Both of those need the system to notice a search came back thin or wrong, and try a different, more specific query instead of trusting the first match. That’s a <em>decide what to search for next</em> problem, not a <em>look further down the list</em> problem, and it’s exactly the difference between one retrieval pass and an agent that can search again. Whether an agent actually closes that gap, rather than just giving the same bad first search another five chunks, is the open question Post 8 has to answer.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What’s next</h2>
+<p class="post-p">Part 8 asks the obvious follow-up: if the model can run its own searches instead of taking one shot, does it fix what a bigger k couldn’t? Specifically q23, does it know to search “2026-06-09 ward device” as a second, narrower query when the first, broader one comes back full of confident nonsense? And q12/q13, which I still can’t explain, will be a useful test in themselves: if an agent fixes them too, that’s a clue about what was wrong. I have a guess about how this goes. I’ve already been wrong once in this very post, so I’m not writing the verdict until I’ve run it.</p>
+<hr class="post-hr">
+
+  </article>
+</main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <span class="prompt">$</span> built 2026-07-16 18:17 UTC &mdash;
+      <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
+    </p>
+  </footer>
+  <script>(function () {
+  const label = document.querySelector(".header-label");
+  if (!label) return;
+
+  const text = label.textContent;
+  label.textContent = "";
+  label.style.visibility = "visible";
+
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.textContent = "▋";
+  cursor.style.cssText = "color: #c8f542; animation: blink 1s step-end infinite;";
+  label.appendChild(cursor);
+
+  const style = document.createElement("style");
+  style.textContent = "@keyframes blink { 50% { opacity: 0; } }";
+  document.head.appendChild(style);
+
+  function type() {
+    if (i < text.length) {
+      cursor.insertAdjacentText("beforebegin", text[i]);
+      i++;
+      setTimeout(type, 35 + Math.random() * 25);
+    } else {
+      setTimeout(() => { cursor.style.display = "none"; }, 1200);
+    }
+  }
+
+  setTimeout(type, 400);
+})();
+</script>
+</body>
+</html>
