@@ -533,14 +533,12 @@ body::after {
   color: var(--text-secondary);
   line-height: 1.8;
   margin-bottom: 1.25rem;
-  font-size: 14px;
 }
 
 .post-list {
   color: var(--text-secondary);
   line-height: 1.8;
   margin: 0 0 1.25rem 1.5rem;
-  font-size: 14px;
 }
 
 .post-list li { margin-bottom: 0.35rem; }
