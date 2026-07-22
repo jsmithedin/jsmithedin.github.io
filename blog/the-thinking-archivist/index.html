@@ -1,0 +1,992 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Building the House of Knowledge: The Thinking Archivist</title>
+  <meta name="description" content="Part 8 of a series on building a real RAG system with real data. Letting the model search for itself, and finding out that &#39;search again&#39; isn&#39;t the same thing as &#39;search better&#39;.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;500;700&family=Syne:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/@tabler/icons-webfont@3.19.0/dist/tabler-icons.min.css">
+  <meta property="og:title" content="Building the House of Knowledge: The Thinking Archivist">
+  <meta property="og:description" content="Part 8 of a series on building a real RAG system with real data. Letting the model search for itself, and finding out that &#39;search again&#39; isn&#39;t the same thing as &#39;search better&#39;.">
+  <meta property="og:type" content="article">
+  <meta property="og:url" content="https://jamielab.uk/blog/the-thinking-archivist/">
+  
+  <meta property="og:image" content="https://jamielab.uk/images/posts/archivist.png">
+  
+  
+  <meta property="article:published_time" content="2026-07-22T00:00:00.000Z">
+  
+  <meta name="twitter:card" content="summary_large_image">
+  <meta name="twitter:title" content="Building the House of Knowledge: The Thinking Archivist">
+  <meta name="twitter:description" content="Part 8 of a series on building a real RAG system with real data. Letting the model search for itself, and finding out that &#39;search again&#39; isn&#39;t the same thing as &#39;search better&#39;.">
+  
+  <meta name="twitter:image" content="https://jamielab.uk/images/posts/archivist.png">
+  
+  <style>:root {
+  --bg: #0d0d0d;
+  --bg-surface: #141414;
+  --bg-card: #181818;
+  --bg-card-hover: #1e1e1e;
+  --border: #2a2a2a;
+  --border-hover: #3a3a3a;
+  --text-primary: #e8e6e0;
+  --text-secondary: #888880;
+  --text-muted: #555550;
+  --accent: #c8f542;
+  --accent-dim: #9bbf2e;
+  --prompt: #c8f542;
+  --font-mono: "JetBrains Mono", "Fira Code", monospace;
+  --font-display: "Syne", sans-serif;
+  --lang-python: #4c8eff;
+  --lang-ts: #3178c6;
+  --lang-js: #f7df1e;
+  --lang-js-text: #1a1a00;
+  --lang-rust: #ce6a30;
+  --lang-go: #00add8;
+  --lang-shell: #89d67c;
+  --lang-hcl: #7b42bc;
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-mono);
+  font-size: clamp(14px, 1vw, 17px);
+  line-height: 1.6;
+  min-height: 100vh;
+}
+
+a { color: inherit; text-decoration: none; }
+
+/* ── Nav ── */
+.site-nav {
+  position: sticky;
+  top: 0;
+  z-index: 100;
+  border-bottom: 1px solid var(--border);
+  background: rgba(13, 13, 13, 0.92);
+  backdrop-filter: blur(8px);
+}
+
+.nav-inner {
+  max-width: clamp(1100px, 82vw, 1600px);
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 52px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.nav-brand {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  font-size: 15px;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+}
+
+.nav-brand:hover { color: var(--accent); transition: color 0.15s; }
+
+.nav-links {
+  display: flex;
+  gap: 1.5rem;
+  align-items: center;
+}
+
+.nav-link {
+  font-size: 13px;
+  color: var(--text-secondary);
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  transition: color 0.15s;
+}
+
+.nav-link:hover { color: var(--accent); }
+.nav-link .ti { font-size: 15px; }
+
+/* ── Header ── */
+.site-main {
+  max-width: clamp(1100px, 82vw, 1600px);
+  margin: 0 auto;
+  padding: 0 2rem 4rem;
+}
+
+.site-header {
+  padding: 4rem 0 3rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 2.5rem;
+}
+
+.header-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 2rem;
+  flex-wrap: wrap;
+}
+
+.header-label {
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 0.75rem;
+  letter-spacing: 0.05em;
+}
+
+.header-title {
+  font-family: var(--font-display);
+  font-size: clamp(2.5rem, 5vw, 4rem);
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin-bottom: 0.75rem;
+}
+
+.header-subtitle {
+  font-size: 13px;
+  color: var(--text-secondary);
+  max-width: 36ch;
+}
+
+.header-stats {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+  flex-shrink: 0;
+}
+
+.stat {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+}
+
+.stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--accent);
+  line-height: 1.1;
+}
+
+.stat-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+}
+
+.stat-divider {
+  color: var(--border);
+  font-size: 24px;
+  font-weight: 300;
+}
+
+/* ── Grid ── */
+.repo-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+  gap: 1px;
+  background: var(--border);
+  border: 1px solid var(--border);
+}
+
+/* ── Card ── */
+.repo-card {
+  background: var(--bg-card);
+  padding: 1.5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: background 0.15s;
+  position: relative;
+}
+
+.repo-card::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.repo-card:hover { background: var(--bg-card-hover); }
+.repo-card:hover::before { height: 100%; }
+
+.card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 0.5rem;
+}
+
+.card-title {
+  font-weight: 700;
+  font-size: 14px;
+  color: var(--text-primary);
+  word-break: break-all;
+  transition: color 0.15s;
+  flex: 1;
+}
+
+.card-title:hover { color: var(--accent); }
+
+.card-links {
+  display: flex;
+  gap: 0.75rem;
+  flex-shrink: 0;
+}
+
+.card-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+  transition: color 0.15s;
+  white-space: nowrap;
+}
+
+.card-link:hover { color: var(--accent); }
+.card-link .ti { font-size: 13px; }
+
+.card-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+  flex: 1;
+}
+
+.card-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 0.5rem;
+  margin-top: auto;
+}
+
+.badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+}
+
+.badge {
+  font-size: 10px;
+  font-family: var(--font-mono);
+  padding: 2px 7px;
+  border-radius: 2px;
+  font-weight: 500;
+  letter-spacing: 0.02em;
+}
+
+.badge-topic {
+  background: transparent;
+  border: 1px solid var(--border-hover);
+  color: var(--text-muted);
+}
+
+.lang-python  { background: rgba(76, 142, 255, 0.15); color: var(--lang-python); }
+.lang-ts      { background: rgba(49, 120, 198, 0.15); color: var(--lang-ts); }
+.lang-js      { background: rgba(247, 223, 30, 0.15);  color: #c9b500; }
+.lang-rust    { background: rgba(206, 106, 48, 0.15);  color: var(--lang-rust); }
+.lang-go      { background: rgba(0, 173, 216, 0.15);   color: var(--lang-go); }
+.lang-shell   { background: rgba(137, 214, 124, 0.15); color: var(--lang-shell); }
+.lang-hcl     { background: rgba(123, 66, 188, 0.15);  color: var(--lang-hcl); }
+.lang-other   { background: transparent; border: 1px solid var(--border-hover); color: var(--text-muted); }
+
+.card-meta {
+  display: flex;
+  gap: 0.75rem;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.meta-item {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+
+.meta-item .ti { font-size: 12px; }
+
+/* ── Prompt accent ── */
+.prompt { color: var(--prompt); }
+
+/* ── Footer ── */
+.site-footer {
+  border-top: 1px solid var(--border);
+  padding: 1.5rem 2rem;
+  max-width: clamp(1100px, 82vw, 1600px);
+  margin: 0 auto;
+}
+
+.footer-text {
+  font-size: 11px;
+  color: var(--text-muted);
+}
+
+.footer-link {
+  color: var(--text-muted);
+  transition: color 0.15s;
+}
+
+.footer-link:hover { color: var(--accent); }
+
+/* ── Scanline overlay ── */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  background: repeating-linear-gradient(
+    0deg,
+    transparent,
+    transparent 2px,
+    rgba(0, 0, 0, 0.03) 2px,
+    rgba(0, 0, 0, 0.03) 4px
+  );
+  z-index: 9999;
+}
+
+/* ── Responsive ── */
+@media (max-width: 640px) {
+  .nav-inner { padding: 0 1rem; }
+  .site-main { padding: 0 1rem 3rem; }
+  .site-header { padding: 2.5rem 0 2rem; }
+  .header-inner { flex-direction: column; align-items: flex-start; }
+  .header-stats { flex-direction: row; }
+  .stat { align-items: flex-start; }
+  .repo-grid { grid-template-columns: 1fr; }
+  .site-footer { padding: 1.5rem 1rem; }
+}
+
+/* ── Section headings (homepage) ── */
+.repos-section { margin-bottom: 3rem; }
+
+.section-heading {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  margin-bottom: 1rem;
+  padding-bottom: 0.75rem;
+  border-bottom: 1px solid var(--border);
+}
+
+.section-label {
+  font-size: 11px;
+  color: var(--text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+}
+
+.section-link {
+  font-size: 11px;
+  color: var(--text-muted);
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  transition: color 0.15s;
+}
+
+.section-link:hover { color: var(--accent); }
+
+/* ── Blog listing ── */
+.blog-preview {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-list {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+}
+
+.blog-row {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+  padding: 1.5rem;
+  border-bottom: 1px solid var(--border);
+  transition: background 0.15s;
+  position: relative;
+  cursor: pointer;
+}
+
+.blog-row::before {
+  content: "";
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 2px;
+  height: 0;
+  background: var(--accent);
+  transition: height 0.2s ease;
+}
+
+.blog-row:hover { background: var(--bg-card-hover); }
+.blog-row:hover::before { height: 100%; }
+.blog-row:last-child { border-bottom: none; }
+
+.blog-row-main { display: flex; flex-direction: column; gap: 0.3rem; }
+
+.blog-row-inner {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  gap: 1rem;
+}
+
+.blog-row-title {
+  font-family: var(--font-display);
+  font-size: 1.05rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  letter-spacing: -0.02em;
+  transition: color 0.15s;
+}
+
+.blog-row:hover .blog-row-title { color: var(--accent); }
+
+.blog-row-desc {
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+.blog-row-meta {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-top: 0.25rem;
+}
+
+.blog-row-stats { display: flex; gap: 1rem; }
+
+/* ── Post page ── */
+.post-header {
+  padding: 3.5rem 0 2.5rem;
+  border-bottom: 1px solid var(--border);
+  margin-bottom: 3rem;
+  max-width: 68ch;
+}
+
+.back-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 12px;
+  color: var(--text-muted);
+  margin-bottom: 1.5rem;
+  transition: color 0.15s;
+}
+
+.back-link:hover { color: var(--accent); }
+
+.post-title {
+  font-family: var(--font-display);
+  font-size: clamp(1.6rem, 4vw, 2.4rem);
+  font-weight: 600;
+  line-height: 1.15;
+  letter-spacing: -0.03em;
+  color: var(--text-primary);
+  margin: 0.75rem 0 1rem;
+}
+
+.post-meta-bar {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  flex-wrap: wrap;
+  margin-bottom: 1rem;
+}
+
+.post-description {
+  font-size: 13px;
+  color: var(--text-muted);
+  font-style: italic;
+  line-height: 1.6;
+  border-left: 2px solid var(--border-hover);
+  padding-left: 1rem;
+  margin-top: 1rem;
+}
+
+/* ── Post content ── */
+.post-content { max-width: 68ch; }
+
+.post-content img {
+  max-width: 100%;
+  height: auto;
+  border-radius: 4px;
+  display: block;
+  margin: 1.5rem auto;
+}
+
+.post-h2 {
+  font-family: var(--font-display);
+  font-size: 1.4rem;
+  font-weight: 600;
+  color: var(--text-primary);
+  margin: 2.5rem 0 0.75rem;
+  letter-spacing: -0.02em;
+}
+
+.post-h3 {
+  font-family: var(--font-mono);
+  font-size: 1rem;
+  font-weight: 700;
+  color: var(--accent);
+  margin: 2rem 0 0.5rem;
+}
+
+.post-p {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin-bottom: 1.25rem;
+}
+
+.post-list {
+  color: var(--text-secondary);
+  line-height: 1.8;
+  margin: 0 0 1.25rem 1.5rem;
+}
+
+.post-list li { margin-bottom: 0.35rem; }
+
+.post-link {
+  color: var(--accent-dim);
+  text-decoration: underline;
+  text-decoration-color: var(--border-hover);
+}
+
+.post-link:hover { color: var(--accent); }
+
+.post-hr {
+  border: none;
+  border-top: 1px solid var(--border);
+  margin: 2rem 0;
+}
+
+.post-quote {
+  border-left: 2px solid var(--accent);
+  margin: 1.5rem 0;
+  padding: 0.5rem 1.25rem;
+  color: var(--text-muted);
+  font-style: italic;
+}
+
+.code-block {
+  position: relative;
+  margin: 1.5rem 0;
+  border: 1px solid var(--border);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.code-block pre { margin: 0; padding: 1.25rem; overflow-x: auto; }
+
+.code-block code {
+  font-family: var(--font-mono);
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.code-block code.hljs {
+  background: var(--bg-surface);
+  padding: 0;
+}
+
+.code-lang {
+  position: absolute;
+  top: 0;
+  right: 0;
+  font-size: 10px;
+  font-family: var(--font-mono);
+  color: var(--text-muted);
+  padding: 3px 8px;
+  background: var(--bg-surface);
+  border-bottom: 1px solid var(--border);
+  border-left: 1px solid var(--border);
+}
+
+.inline-code {
+  font-family: var(--font-mono);
+  font-size: 12px;
+  color: var(--accent-dim);
+  background: var(--bg-surface);
+  padding: 1px 5px;
+  border-radius: 2px;
+  border: 1px solid var(--border);
+}
+
+/* ── Syntax highlighting (highlight.js github-dark) ── */
+pre code.hljs {
+  display: block;
+  overflow-x: auto;
+  padding: 1em
+}
+code.hljs {
+  padding: 3px 5px
+}
+/*!
+  Theme: GitHub Dark
+  Description: Dark theme as seen on github.com
+  Author: github.com
+  Maintainer: @Hirse
+  Updated: 2021-05-15
+
+  Outdated base version: https://github.com/primer/github-syntax-dark
+  Current colors taken from GitHub's CSS
+*/
+.hljs {
+  color: #c9d1d9;
+  background: #0d1117
+}
+.hljs-doctag,
+.hljs-keyword,
+.hljs-meta .hljs-keyword,
+.hljs-template-tag,
+.hljs-template-variable,
+.hljs-type,
+.hljs-variable.language_ {
+  /* prettylights-syntax-keyword */
+  color: #ff7b72
+}
+.hljs-title,
+.hljs-title.class_,
+.hljs-title.class_.inherited__,
+.hljs-title.function_ {
+  /* prettylights-syntax-entity */
+  color: #d2a8ff
+}
+.hljs-attr,
+.hljs-attribute,
+.hljs-literal,
+.hljs-meta,
+.hljs-number,
+.hljs-operator,
+.hljs-variable,
+.hljs-selector-attr,
+.hljs-selector-class,
+.hljs-selector-id {
+  /* prettylights-syntax-constant */
+  color: #79c0ff
+}
+.hljs-regexp,
+.hljs-string,
+.hljs-meta .hljs-string {
+  /* prettylights-syntax-string */
+  color: #a5d6ff
+}
+.hljs-built_in,
+.hljs-symbol {
+  /* prettylights-syntax-variable */
+  color: #ffa657
+}
+.hljs-comment,
+.hljs-code,
+.hljs-formula {
+  /* prettylights-syntax-comment */
+  color: #8b949e
+}
+.hljs-name,
+.hljs-quote,
+.hljs-selector-tag,
+.hljs-selector-pseudo {
+  /* prettylights-syntax-entity-tag */
+  color: #7ee787
+}
+.hljs-subst {
+  /* prettylights-syntax-storage-modifier-import */
+  color: #c9d1d9
+}
+.hljs-section {
+  /* prettylights-syntax-markup-heading */
+  color: #1f6feb;
+  font-weight: bold
+}
+.hljs-bullet {
+  /* prettylights-syntax-markup-list */
+  color: #f2cc60
+}
+.hljs-emphasis {
+  /* prettylights-syntax-markup-italic */
+  color: #c9d1d9;
+  font-style: italic
+}
+.hljs-strong {
+  /* prettylights-syntax-markup-bold */
+  color: #c9d1d9;
+  font-weight: bold
+}
+.hljs-addition {
+  /* prettylights-syntax-markup-inserted */
+  color: #aff5b4;
+  background-color: #033a16
+}
+.hljs-deletion {
+  /* prettylights-syntax-markup-deleted */
+  color: #ffdcd7;
+  background-color: #67060c
+}
+.hljs-char.escape_,
+.hljs-link,
+.hljs-params,
+.hljs-property,
+.hljs-punctuation,
+.hljs-tag {
+  /* purposely ignored */
+  
+}
+</style>
+  <script defer src="https://cloud.umami.is/script.js" data-website-id="a43298d8-e577-4567-bf64-8cf6bf0a620b"></script>
+</head>
+<body>
+  <nav class="site-nav">
+    <div class="nav-inner">
+      <a href="/" class="nav-brand"><span class="prompt">~/</span>jsmithedin</a>
+      <div class="nav-links">
+        <a href="/blog/" class="nav-link"><i class="ti ti-pencil" aria-hidden="true"></i> blog</a>
+        <a href="https://github.com/jsmithedin" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-github" aria-hidden="true"></i> github</a>
+        <a href="https://www.linkedin.com/in/jamie-smith-engineer" class="nav-link" target="_blank" rel="noopener">
+          <i class="ti ti-brand-linkedin" aria-hidden="true"></i> linkedin</a>
+      </div>
+    </div>
+  </nav>
+  <main class="site-main">
+  <div class="post-header">
+    <a href="/blog/" class="back-link"><i class="ti ti-arrow-left" aria-hidden="true"></i> all posts</a>
+    <p class="header-label"><span class="prompt">$</span> cat ./posts/the-thinking-archivist.md</p>
+    <h1 class="post-title">Building the House of Knowledge: The Thinking Archivist</h1>
+    <div class="post-meta-bar">
+      <span class="meta-item"><i class="ti ti-calendar" aria-hidden="true"></i> 22 Jul 2026</span>
+      <span class="meta-item"><i class="ti ti-clock" aria-hidden="true"></i> 11 min read</span>
+      <div class="badges">
+        
+        <span class="badge badge-topic">ai</span>
+        
+        <span class="badge badge-topic">RAG</span>
+        
+        <span class="badge badge-topic">House of Knowledge</span>
+        
+        <span class="badge badge-topic">evaluation</span>
+        
+      </div>
+    </div>
+    <p class="post-description">Part 8 of a series on building a real RAG system with real data. Letting the model search for itself, and finding out that &#39;search again&#39; isn&#39;t the same thing as &#39;search better&#39;.</p>
+  </div>
+  <article class="post-content">
+    <h1 class="post-h1">Building the House of Knowledge: The Thinking Archivist</h1>
+<p class="post-p"><em>Part 8 of the House of Knowledge series. <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-RAG-on-a-budget/" class="post-link">Part 1 is here.</a> <a href="https://jamielab.uk/blog/lost-in-the-stacks/" class="post-link">Part 7, where retrieval fails, is here.</a></em></p>
+<hr class="post-hr">
+<p class="post-p">Part 7 ended on a specific question, not a vague one. The ward-device query, q23, never got the right note into its top five at any k I tried, up to fifteen. The theory was that this was a different kind of failure to the budget-hogging ones: not “the answer is in there somewhere, ranked too low,” but “the query and the right chunk don’t share enough vocabulary for the ranking to ever put them together.” A wider net doesn’t fix that. Deciding to search again, differently, might. So I asked, directly: given the tool, would the model know to search “2026-06-09 ward device” as a second, narrower attempt, once the first broad search came back full of confident nonsense?</p>
+<p class="post-p">The honest answer is: sometimes it tries something like that, and it still doesn’t work. That’s a more interesting result than either a clean yes or a clean no, and it’s most of this post.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What agentic actually means here</h2>
+<p class="post-p">Everything so far has been one retrieval pass: embed the question, pull the top k chunks, hand them to the model, done. Agentic mode gives the model a tool, <code class="inline-code">search_knowledge_base(query, k)</code>, and lets it call it as many times as it wants before answering, up to five rounds. The model sees the results of one search and decides whether to search again, search differently, or answer. That’s the entire idea. No planning step, no separate retrieval agent, just the same model with a tool and room to change its mind.</p>
+<p class="post-p">The tool and the loop already existed in the codebase from when I built the Converse API layer in <a href="https://jamielab.uk/blog/building-the-house-of-knowledge-bedrock-api/" class="post-link">Part 2</a>: <code class="inline-code">invoke_with_tools</code>, five-iteration cap, cumulative token tracking across every round. What didn’t exist was a way to run the Post 5 test set through it and score what came back. That was most of the actual work this time: a second eval runner alongside the one from Posts 5 and 6, same golden set, same rubric, agentic path instead of single-shot.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The whole thing in one picture</h2>
+<p class="post-p"><img src="/images/posts/archivist.png" alt="Nova Lite versus Haiku 4.5 in agentic mode across the House of Knowledge eval. Three panels: retrieval recall by tier against the Part 6 baseline, both models at 1.00 on lookup, Nova Lite dropping to 0.54 and Haiku rising to 0.76 on synthesis against a 0.60 baseline, temporal at 0.62 baseline versus 0.62 for Nova Lite and 0.71 for Haiku; percentage of queries answered on a single search, Nova Lite 67% (16 of 24) against Haiku 42% (10 of 24); and cost per query against baseline, Nova Lite $0.00011 to $0.00027, Haiku 4.5 $0.00259 to $0.01094."></p>
+<p class="post-p">That’s the whole result before any of the explaining. One model’s recall went up once it had the tool, the other’s went down, and the reason is sitting in the middle panel: how often each one actually bothered to search twice.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Re-running the test set: it only helps the model that’s good enough to use it</h2>
+<table>
+<thead>
+<tr>
+<th>tier</th>
+<th>baseline (Part 6)</th>
+<th>agentic, Nova Lite</th>
+<th>agentic, Haiku 4.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>lookup</td>
+<td>1.00 recall</td>
+<td>1.00</td>
+<td>1.00</td>
+</tr>
+<tr>
+<td>synthesis</td>
+<td>0.60 recall</td>
+<td>0.54</td>
+<td>0.76</td>
+</tr>
+<tr>
+<td>temporal</td>
+<td>0.62 recall</td>
+<td>0.62</td>
+<td>0.71</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Lookup was already solved and stays solved, no surprise there. The interesting split is synthesis. Haiku’s recall goes up, meaningfully, from 0.60 to 0.76: letting it search again actually recovers notes a single pass missed. Nova Lite’s recall goes <em>down</em>, from 0.60 to 0.54. Giving Nova Lite the same tool made it slightly worse at the thing the tool is supposed to help with.</p>
+<p class="post-p">That’s not a typo and I checked it twice. The reason is sitting right there in what each model actually chose to search for:</p>
+<table>
+<thead>
+<tr>
+<th></th>
+<th>Nova Lite</th>
+<th>Haiku 4.5</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>mean iterations per query</td>
+<td>2.5</td>
+<td>2.2</td>
+</tr>
+<tr>
+<td>mean search calls per query</td>
+<td>1.5</td>
+<td>2.1</td>
+</tr>
+<tr>
+<td>queries answered on one search</td>
+<td>16 / 24</td>
+<td>10 / 24</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Nova Lite takes more turns on average but spends most of them thinking, not searching again, it asks one search question and mostly just sits with the answer. Haiku searches more, and more often follows up a first search with a second, differently-worded one. Handed a tool that lets it reconsider, Nova Lite mostly didn’t, and on the minority of queries where its single search wasn’t quite right, there was no second attempt to save it. Agentic retrieval isn’t a free upgrade you bolt onto any model. It’s only as good as the model’s judgement about when its first search wasn’t good enough yet, and that judgement is exactly the kind of thing that’s supposed to separate a cheap model from an expensive one.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The one that went the way I hoped</h2>
+<p class="post-p">q11: “How is the House of Knowledge responding to the crisis, and why does Brother Coldis Ren disagree with the Grand Scribe?” Three notes answer it: the House of Knowledge itself, the Grand Scribe, and Brother Coldis Ren. The single-shot baseline got two of three, recall 0.67, missing the institution’s own note in favour of a session recap.</p>
+<p class="post-p">Nova Lite searched once, “House of Knowledge response to crisis,” and came back worse than the baseline it was meant to improve on: recall 0.33. Its one rephrased query leaned so hard toward the place that it dropped both of the people the question is actually about.</p>
+<p class="post-p">Haiku searched twice. First “House of Knowledge crisis response,” much the same idea as Nova Lite’s. Then, once it had that, a second search naming the two people the question is actually about: “Brother Coldis Ren Grand Scribe disagreement.” That second search is exactly what Part 7 hoped an agent would do: notice a search answered half the question and go get the other half specifically, rather than casting the same net twice. Recall: 1.0, all three notes.</p>
+<p class="post-p">That’s the whole case for agentic retrieval in one query. Not “search more.” Notice what your first search missed, and go get that specific thing. Haiku did it here. Nova Lite, same query, went the other way entirely.</p>
+<hr class="post-hr">
+<h2 class="post-h2">The one that should have been a clean win, and wasn’t</h2>
+<p class="post-p">Part 7’s k-experiment found something concrete: q24, “how has the plan for Nand’s funeral shifted, and why does the timing matter,” went from 0.0 recall to 1.0 the moment I asked for ten chunks instead of five. The right note, <code class="inline-code">2026-03-03.md</code>, was there all along, just crowded out by <code class="inline-code">Nand.md</code> and <code class="inline-code">Sister Maelin Thorn.md</code> eating most of the top five between them. More room, free fix, done. If an agent can ask for more chunks whenever it wants, this should have been the easiest win in the whole run.</p>
+<p class="post-p">It wasn’t. Both models scored 0.0 recall on q24 in agentic mode. Here’s why: Haiku asked for k=10, twice, which on paper should have been exactly the fix Part 7 found. But it didn’t search “how has the plan for Nand’s funeral shifted, and why does the timing matter”, it searched “Nand’s funeral plan” and “Nand funeral timing”, its own shortened version of the question. Twenty chunks came back across the two calls. Every one of them was <code class="inline-code">Nand.md</code>, <code class="inline-code">Sister Maelin Thorn.md</code>, <code class="inline-code">Neverwinter Academy.md</code>, or the same session recap, repeated. <code class="inline-code">2026-03-03.md</code> never showed up, at k=10, twice over. Nova Lite did something similar with its two attempts, “Nand’s funeral” and “timing of Nand’s funeral,” both at the default k=5, and got the identical crowd of the same three notes.</p>
+<p class="post-p">Part 7’s fix worked because it changed one variable, k, and left the query exactly as written. The agent changes two variables at once: it picks its own k, and it rewrites the query into something shorter and, it turns out, worse. A bigger net thrown from the wrong spot doesn’t catch anything a smaller net from the wrong spot wouldn’t. The lesson isn’t “agentic search failed here.” It’s that giving a model the freedom to decide <em>what</em> to search for doesn’t come bundled with a good instinct for <em>how</em> to phrase it, and a worse query can quietly cancel out a wider k before either model notices there’s a problem at all.</p>
+<hr class="post-hr">
+<h2 class="post-h2">q23, or: what “try again” actually looks like from two different models</h2>
+<p class="post-p">This is the query Part 7 set the whole test up around, and it’s the clean contrast the rest of this post doesn’t quite deliver.</p>
+<p class="post-p">Nova Lite’s full search history for q23, five iterations, five calls:</p>
+<ol class="post-list">
+<li>“portable ward device behavior during testing”</li>
+<li>“portable ward device behavior during testing and reaction to Ultrin”</li>
+<li>“portable ward device behavior during testing and Ultrin’s interaction with it”</li>
+<li>“portable ward device behavior during testing and Ultrin’s interaction with it”</li>
+<li>“portable ward device behavior during testing and Ultrin’s interaction with it”</li>
+</ol>
+<p class="post-p">Three of the five are the literal same string. It hit the iteration cap and produced no answer at all. That’s the failure mode Part 7 worried about out loud: an agent that just gives its bad first search another five chunks, dressed up as five separate attempts.</p>
+<p class="post-p">Haiku’s search history for the same query:</p>
+<ol class="post-list">
+<li>“portable ward device testing”</li>
+<li>“Ultrin portable ward device”</li>
+<li>“portable ward device testing behavior”</li>
+<li>“ward device Ultrin approach reaction”</li>
+<li>“portable ward sphere artifact”</li>
+<li>“ward device Ultrin reaction change behavior”</li>
+<li>“portable ward test approach proximity”</li>
+<li>“portable ward device testing experiment”</li>
+</ol>
+<p class="post-p">Eight genuinely different angles across five iterations (multiple calls per round, same pattern Nand’s-funeral search used). Device, artifact, sphere, proximity, experiment. This is what “search again, differently” is actually supposed to look like, and it’s still zero recall. Part 7 already established why: the chunks that share vocabulary with this query are five unrelated 2024 scenes that happen to contain “Ultrin, doing something, something reacting,” and no rephrasing that stays inside the same vector space finds its way around that. Haiku’s answer, in the end:</p>
+<blockquote class="post-quote">
+<p class="post-p">I apologize, but I’m unable to find information about a “portable ward device” and its testing behavior in the campaign notes.</p>
+</blockquote>
+<p class="post-p">Honest, after real effort. Nova Lite’s answer was silence, after less effort dressed up as more. Same corpus gap both times. What differs is entirely what the model does when the first search comes back wrong, which is exactly the axis Part 6 already found between these two models on generation. Turns out it’s the same axis on retrieval.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Cost and latency: the bill for all this searching</h2>
+<table>
+<thead>
+<tr>
+<th>model</th>
+<th>cost/query: baseline → agentic</th>
+<th>latency p50: baseline → agentic</th>
+<th>p95</th>
+</tr>
+</thead>
+<tbody>
+<tr>
+<td>Nova Lite</td>
+<td>$0.00011 → $0.00027 (2.5×)</td>
+<td>642ms → 2375ms (3.7×)</td>
+<td>972ms → 6653ms (6.8×)</td>
+</tr>
+<tr>
+<td>Haiku 4.5</td>
+<td>$0.00259 → $0.01094 (4.2×)</td>
+<td>2902ms → 6101ms (2.1×)</td>
+<td>4403ms → 11556ms (2.6×)</td>
+</tr>
+</tbody>
+</table>
+<p class="post-p">Nova Lite’s p95 latency got worse, relatively, than Haiku’s, which looks backwards until you remember q23: five wasted round trips with nothing to show for it, on the cheap model that’s supposed to be the fast one. Haiku’s cost multiplier is the bigger number in absolute terms, 4.2 times a baseline that was already 24 times Nova Lite’s, but it at least bought something on synthesis recall. Nova Lite’s extra spend bought a slightly worse retrieval score and one query that returned nothing at all.</p>
+<hr class="post-hr">
+<h2 class="post-h2">Was there time to score this properly? No, and I’m saying so.</h2>
+<p class="post-p">Posts 5 through 7 leaned on blind human scoring as the primary judge, with the automated RAGAS/Mistral faithfulness check running alongside it as a secondary signal, one that agreed with me only 31% of the time and specifically punished honest refusals. This post skipped the human pass. Busy week, and I already knew roughly what the automated judge’s failure mode looks like, so I made the call to run judge-only rather than not publish this at all.</p>
+<p class="post-p">I’m not going to pretend that’s the same rigor as the last three posts. The faithfulness numbers are in the full report if you want them, and they’re about as trustworthy as Part 6 already showed that metric to be, which is to say: a rough signal, not a verdict. One data point that stood out even on those terms: Nova Lite scored <em>higher</em> faithfulness than Haiku on lookup and synthesis, which sits oddly next to Haiku’s better retrieval recall on synthesis just above. That’s either the judge’s known bias showing up again, or a genuine finding I don’t have the confidence to call from a judge score alone. Filed as unresolved, not smoothed over.</p>
+<hr class="post-hr">
+<h2 class="post-h2">So does the agent fix what Part 7 found?</h2>
+<p class="post-p">Sometimes, for one of the two models, on one of the three tiers. That’s the honest verdict, and it’s a smaller win than I went in expecting.</p>
+<p class="post-p">Haiku’s synthesis recall genuinely improved, and that’s real: multi-hop questions that need several notes assembled benefit from a model that knows to check again. But q23, the query this whole post was framed around, came back empty from both models regardless of how many honestly different searches one of them tried. q24, which Part 7 had already solved with nothing more than a bigger k, came back broken in agentic mode because the model’s own query rewriting undid the fix before the extra budget could help.</p>
+<p class="post-p">Add the cost, roughly triple to quadruple per query, and the latency, two to seven times worse depending on which tail you’re looking at, and agentic mode isn’t the upgrade the framing of “let the model decide” implies. It’s a real improvement for the one failure mode it actually targets, retrieval that’s shallow rather than wrong, on the one model with the judgement to use it well. For a coincidental-overlap failure like q23, it’s just a slower, more expensive way of not finding the answer. Worth having in the toolkit. Not worth reaching for by default.</p>
+<hr class="post-hr">
+<h2 class="post-h2">What’s next</h2>
+<p class="post-p">The series started with a local DeepSeek prototype that got replaced by Bedrock because an 8GB NUC couldn’t carry generation. Part 9 goes back and asks whether that’s still true. A year of small-model progress against pennies-per-query Bedrock pricing, on hardware I actually own rather than hardware I’d need to buy to find out.</p>
+<p class="post-p">I went in hoping for a clean yes. Got “sometimes, if you’re paying for Haiku” instead. Part 9 asks a question with a less embarrassing range of answers: does anything on the hardware I already own do this job at all.</p>
+
+  </article>
+</main>
+
+  <footer class="site-footer">
+    <p class="footer-text">
+      <span class="prompt">$</span> built 2026-07-22 16:55 UTC &mdash;
+      <a href="https://github.com/jsmithedin/jsmithedin.github.io" class="footer-link">source</a>
+    </p>
+  </footer>
+  <script>(function () {
+  const label = document.querySelector(".header-label");
+  if (!label) return;
+
+  const text = label.textContent;
+  label.textContent = "";
+  label.style.visibility = "visible";
+
+  let i = 0;
+  const cursor = document.createElement("span");
+  cursor.textContent = "▋";
+  cursor.style.cssText = "color: #c8f542; animation: blink 1s step-end infinite;";
+  label.appendChild(cursor);
+
+  const style = document.createElement("style");
+  style.textContent = "@keyframes blink { 50% { opacity: 0; } }";
+  document.head.appendChild(style);
+
+  function type() {
+    if (i < text.length) {
+      cursor.insertAdjacentText("beforebegin", text[i]);
+      i++;
+      setTimeout(type, 35 + Math.random() * 25);
+    } else {
+      setTimeout(() => { cursor.style.display = "none"; }, 1200);
+    }
+  }
+
+  setTimeout(type, 400);
+})();
+</script>
+</body>
+</html>
